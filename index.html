@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Rentals">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<title>Rentals</title>
+<script>try{const t=localStorage.getItem('rentcalc.theme');if(t&&t!=='auto')document.documentElement.dataset.theme=t}catch(e){}</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+:root{--bg:#f2f2f7;--card:#fff;--fill:#f2f2f7;--fill2:rgba(118,118,128,.12);--ink:#000;--ink2:#3c3c43;--mut:#8e8e93;--line:rgba(60,60,67,.18);
+ --acc:#007aff;--accT:rgba(0,122,255,.12);--good:#248a3d;--bad:#d70015;--warn:#c93400;--segOn:#fff;--shadow:0 1px 2px rgba(0,0,0,.06),0 3px 8px rgba(0,0,0,.04);--glass:rgba(242,242,247,.82);--glassB:rgba(255,255,255,.85)}
+:root[data-theme=dark]{--bg:#000;--card:#1c1c1e;--fill:#2c2c2e;--fill2:rgba(118,118,128,.24);--ink:#fff;--ink2:#ebebf5;--mut:#8e8e93;--line:rgba(84,84,88,.6);
+ --acc:#0a84ff;--accT:rgba(10,132,255,.18);--good:#30d158;--bad:#ff453a;--warn:#ff9f0a;--segOn:#636366;--shadow:none;--glass:rgba(0,0,0,.78);--glassB:rgba(28,28,30,.85)}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#000;--card:#1c1c1e;--fill:#2c2c2e;--fill2:rgba(118,118,128,.24);--ink:#fff;--ink2:#ebebf5;--mut:#8e8e93;--line:rgba(84,84,88,.6);
+ --acc:#0a84ff;--accT:rgba(10,132,255,.18);--good:#30d158;--bad:#ff453a;--warn:#ff9f0a;--segOn:#636366;--shadow:none;--glass:rgba(0,0,0,.78);--glassB:rgba(28,28,30,.85)}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{color-scheme:light dark}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.35 -apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Segoe UI,Roboto,sans-serif;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;letter-spacing:-.2px}
+header{position:sticky;top:0;z-index:5;background:var(--glass);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);padding:calc(10px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) 10px calc(16px + env(safe-area-inset-left));border-bottom:.5px solid var(--line)}
+.hrow{display:flex;align-items:center;gap:8px;min-height:36px;margin-bottom:8px}
+.hrow h1{font-size:28px;font-weight:700;letter-spacing:.2px;margin:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body.inproj .hrow h1{font-size:20px}
+.logo{width:34px;height:34px;flex:none}
+body.inproj .logo{display:none}
+.back{border:0;background:none;color:var(--acc);font:inherit;font-size:17px;padding:4px 4px 4px 0;white-space:nowrap}
+.icon{border:0;background:var(--fill2);color:var(--acc);width:34px;height:34px;border-radius:50%;font-size:17px;display:flex;align-items:center;justify-content:center;flex:none}
+#saveState{font-size:13px;color:var(--mut);white-space:nowrap}
+.tabs,.seg{display:flex;background:var(--fill2);border-radius:9px;padding:2px;gap:0;border:0;overflow:visible}
+.tabs button,.seg button{flex:1;border:0;background:transparent;color:var(--ink);padding:7px 6px;border-radius:7px;font:inherit;font-size:13.5px;font-weight:500;transition:background .15s;white-space:nowrap}
+.tabs button.on,.seg button.on{background:var(--segOn);box-shadow:0 3px 8px rgba(0,0,0,.12),0 1px 1px rgba(0,0,0,.04);font-weight:600;color:var(--ink)}
+.seg button:disabled{opacity:.5}
+main{padding:16px 16px 130px;max-width:760px;margin:0 auto}
+details.card,.card{background:var(--card);border:0;border-radius:14px;padding:14px 16px;margin-bottom:14px;box-shadow:var(--shadow)}
+summary{font-weight:600;font-size:17px;cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;min-height:28px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:'›';color:var(--mut);font-size:22px;font-weight:400;transition:transform .2s;margin-left:6px;line-height:1}
+details[open] summary::after{transform:rotate(90deg)}
+summary small{font-weight:400;color:var(--mut);font-size:14px;margin-left:auto}
+details[open] summary{margin-bottom:14px}
+.card h2{font-size:13px;font-weight:400;text-transform:uppercase;letter-spacing:.3px;color:var(--mut);margin:0 0 10px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.full{grid-column:1/-1}
+label{display:block;font-size:13px;color:var(--mut);margin:0 0 5px 2px}
+input,select,textarea{width:100%;font:inherit;font-size:17px;padding:11px 12px;border:0;border-radius:10px;background:var(--fill);color:var(--ink);min-width:0;-webkit-appearance:none;appearance:none}
+select{background-image:linear-gradient(45deg,transparent 50%,var(--mut) 50%),linear-gradient(135deg,var(--mut) 50%,transparent 50%);background-position:calc(100% - 17px) 52%,calc(100% - 12px) 52%;background-size:5px 5px;background-repeat:no-repeat;padding-right:30px}
+input:focus,select:focus{outline:2px solid var(--acc);outline-offset:0}
+input::placeholder{color:var(--mut)}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+input[type=checkbox]{-webkit-appearance:none;appearance:none;width:51px;height:31px;border-radius:16px;background:var(--fill2);position:relative;flex:none;margin:0 12px 0 0;padding:0;transition:background .2s;cursor:pointer}
+input[type=checkbox]::after{content:'';position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 3px 8px rgba(0,0,0,.15),0 1px 1px rgba(0,0,0,.16);transition:transform .2s}
+input[type=checkbox]:checked{background:#34c759}
+input[type=checkbox]:checked::after{transform:translateX(20px)}
+input[type=checkbox]:focus{outline:none}
+.chk{display:flex;align-items:center;font-size:16px;color:var(--ink);margin:0}
+.hint{font-size:13px;color:var(--mut);margin-top:5px;line-height:1.35}
+.hide{display:none!important}
+.party,.season{background:var(--fill);border-radius:12px;padding:12px;margin-bottom:10px;border:0}
+.party input,.party select,.season input,.season select{background:var(--card)}
+.party .top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
+.party .top b{font-size:15px;font-weight:600}
+.party .seg{background:var(--fill2)}
+.conv{font-size:14px;color:var(--acc);font-weight:500;margin-top:4px;font-variant-numeric:tabular-nums}
+.x{border:0;background:var(--fill2);color:var(--acc);border-radius:16px;padding:6px 12px;font:inherit;font-size:14px;font-weight:500;white-space:nowrap}
+.party .x,.season .x{background:var(--card)}
+.add{width:100%;border:0;background:var(--accT);color:var(--acc);border-radius:12px;padding:13px;font:inherit;font-size:16px;font-weight:600;margin-top:2px}
+.btn{width:100%;border:0;background:var(--acc);color:#fff;border-radius:12px;padding:14px;font:inherit;font-size:17px;font-weight:600}
+.btn:active,.add:active,.x:active{opacity:.6}
+.alloc{display:flex;height:8px;border-radius:4px;overflow:hidden;background:var(--fill2);margin:14px 0 8px}
+.alloc div{height:100%}
+.legend{display:flex;gap:12px;font-size:13px;color:var(--mut);flex-wrap:wrap}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kpi{background:var(--fill);border-radius:12px;padding:12px}
+.kpi .v{font-size:22px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:-.4px}
+.kpi .l{font-size:13px;color:var(--mut);margin-top:2px}
+.kpi .s{font-size:12.5px;color:var(--mut);margin-top:2px}
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -4px}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+td,th{padding:9px 6px;border-bottom:.5px solid var(--line);text-align:right;font-size:14px;white-space:nowrap}
+td:first-child,th:first-child{text-align:left}
+th{font-size:12px;color:var(--mut);font-weight:500;text-transform:uppercase;letter-spacing:.2px}
+tr:last-child td{border-bottom:0}
+tr.tot td{font-weight:600;border-top:.5px solid var(--line)}
+.neg{color:var(--bad)}.pos{color:var(--good)}
+.pc{background:var(--fill);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+.pc .h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;gap:8px}
+.pc .h b{font-size:17px;font-weight:600}
+.pc .h span{font-size:13px;color:var(--mut);text-align:right}
+.pc .row{display:flex;justify-content:space-between;gap:10px;font-size:15px;padding:5px 0;font-variant-numeric:tabular-nums;border-bottom:.5px solid var(--line)}
+.pc .row:last-child{border-bottom:0}
+.pc .row span:first-child{color:var(--ink2)}
+.pc .row span:last-child{text-align:right}
+.pc .row.t{font-weight:600}
+.pc .row.t span:first-child{color:var(--ink)}
+.pc .sub{font-size:12px;text-transform:uppercase;letter-spacing:.3px;color:var(--mut);margin:12px 0 2px}
+.warn{color:var(--warn);font-size:14px;margin-top:8px}
+.bad{color:var(--bad);font-size:14px;margin-top:8px;font-weight:500}
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--glassB);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);border-top:.5px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom));display:flex;gap:10px;z-index:6}
+.bar button{flex:1;font:inherit;font-size:16px;font-weight:600;padding:13px 8px;border-radius:12px;border:0;background:var(--accT);color:var(--acc)}
+.bar button.pri{background:var(--acc);color:#fff}
+.proj{display:block;width:100%;text-align:left;border:0;background:var(--card);color:var(--ink);border-radius:14px;padding:14px 16px;margin-bottom:12px;font:inherit;box-shadow:var(--shadow)}
+.proj:active{opacity:.7}
+.proj .t{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.proj b{font-size:17px;font-weight:600}
+.proj small{color:var(--mut);font-size:14px}
+.proj .m{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px;padding-top:10px;border-top:.5px solid var(--line);font-size:13px;font-variant-numeric:tabular-nums}
+.proj .m span{color:var(--mut);font-size:12.5px}
+.proj .m b{font-size:15px;color:var(--ink)}
+.badge{font-size:12px;font-weight:600;padding:3px 9px;border-radius:12px;background:rgba(255,149,0,.15);color:var(--warn);letter-spacing:.1px}
+.badge.run{background:rgba(52,199,89,.15);color:var(--good)}
+.item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 0;border-bottom:.5px solid var(--line);font-size:15px}
+.item:last-child{border-bottom:0}
+.item>div:first-child{flex:1;min-width:0}
+.item small{display:block;color:var(--mut);font-size:13px;margin-top:1px}
+.item .amt{font-weight:600;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.item .x{color:var(--bad)}
+#toast{position:fixed;left:50%;top:calc(14px + env(safe-area-inset-top));transform:translate(-50%,-8px);background:var(--glassB);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);color:var(--ink);padding:11px 18px;border-radius:22px;font-size:15px;font-weight:500;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;z-index:30;box-shadow:0 8px 30px rgba(0,0,0,.18)}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+.empty{color:var(--mut);font-size:15px;text-align:center;padding:28px 8px}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:20;display:flex;align-items:flex-end;justify-content:center;padding:10px}
+#modal.hide{display:none}
+.mbox{background:var(--glassB);-webkit-backdrop-filter:blur(30px);backdrop-filter:blur(30px);border-radius:14px;padding:18px 16px 12px;width:100%;max-width:440px;margin-bottom:env(safe-area-inset-bottom);text-align:center}
+.mbox b{font-size:17px;font-weight:600}.mbox p{color:var(--mut);font-size:14px;margin:6px 0 14px}
+#mBtns{display:flex;flex-direction:column;gap:8px}
+#mBtns button{font:inherit;font-size:17px;padding:13px;border-radius:12px;border:0;background:var(--fill2);color:var(--acc)}
+#mBtns button.pri{background:var(--acc);color:#fff;font-weight:600}
+#mBtns button.danger{color:var(--bad)}
+.lock{background:var(--accT)!important;box-shadow:none!important}
+.lock b{font-weight:600}
+.lock p{margin:4px 0 10px;font-size:14px;color:var(--ink2)}
+#vPlan.locked input,#vPlan.locked select{opacity:.6}
+.dirty{color:var(--warn)!important;font-weight:600}
+</style>
+</head>
+<body>
+<header>
+  <div class="hrow"><img src="logo.svg" alt="" class="logo" id="logo"><button class="back hide" id="bBack" aria-label="Projects"><svg width="12" height="20" viewBox="0 0 12 20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2 2 10l8 8"/></svg></button><h1 id="title">Rentals</h1><span id="saveState"></span><button class="icon" id="bTheme" aria-label="Settings"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor"/></svg></button></div>
+  <div class="tabs" id="homeTabs"><button data-ht="running" class="on">Running</button><button data-ht="tender">Tender</button><button data-ht="dash">Dashboard</button></div>
+  <div class="tabs hide" id="projTabs"><button data-pt="plan" class="on">Plan</button><button data-pt="actual" id="ptActual">Actuals</button><button data-pt="report">Report</button></div>
+</header>
+
+<!-- ================= HOME ================= -->
+<main id="vHome">
+  <div class="card hide" id="portfolio"></div>
+  <div id="backupHint" class="hint" style="margin:0 4px 10px"></div>
+  <div id="projList"><div class="empty">Loading…</div></div>
+  <button class="add" id="newProj">＋ New project</button>
+</main>
+
+<!-- ================= DASHBOARD ================= -->
+<main id="vDash" class="hide">
+  <div class="card">
+    <h2>Projects</h2>
+    <div class="seg" id="dSel"><button data-ds="running">All running</button><button data-ds="all">All projects</button><button data-ds="custom">Choose</button></div>
+    <div id="dPick" class="hide" style="margin-top:8px"></div>
+    <label style="margin-top:12px">Period</label>
+    <div class="seg" id="dRange"><button data-dr="month">This month</button><button data-dr="ytd">This year</button><button data-dr="todate">Start → today</button><button data-dr="custom">From – to</button></div>
+    <div class="grid hide" id="dCustom" style="margin-top:10px"><div><label>From</label><input id="dFrom" type="month"></div><div><label>To</label><input id="dTo" type="month"></div></div>
+    <label style="margin-top:12px">Group by</label>
+    <div class="seg" id="dView"><button data-dv="month">Monthly</button><button data-dv="quarter">Quarterly</button><button data-dv="year">Annual</button></div>
+  </div>
+  <div class="card" id="dKpis"></div>
+  <div class="card"><h2 id="dhPer">By period</h2><div class="tw"><table id="dPer"></table></div></div>
+  <div class="card"><h2>By project</h2><div class="tw"><table id="dProj"></table></div></div>
+  <div class="card"><h2>Investment — budget vs actual</h2><div class="tw"><table id="dInv"></table></div></div>
+</main>
+
+<!-- ================= PLAN ================= -->
+<main id="vPlan" class="hide">
+  <div class="card hide" id="planBanner"></div>
+  <details class="card" open>
+    <summary>1 · Unit</summary>
+    <div class="grid">
+      <div class="full"><label>Project name</label><input data-k="name" placeholder="e.g. Zamalek 2BR"></div>
+      <div class="full"><label>Location</label><input data-k="location" placeholder="Area, city"></div>
+      <div><label>Area (m²)</label><input data-k="area" type="number" inputmode="decimal"></div>
+      <div><label>Bedrooms</label><input data-k="beds" type="number" inputmode="numeric"></div>
+    </div>
+  </details>
+
+  <details class="card" open>
+    <summary>2 · Investment <small id="sInv"></small></summary>
+    <div class="grid" style="margin-bottom:10px">
+      <div class="full"><label>USD rate when invested</label><input data-k="fxInvest" type="number" inputmode="decimal" placeholder="EGP per $1"></div>
+    </div>
+    <div id="items"></div>
+    <button class="add" id="addItem">＋ Add investment item</button>
+    <div class="tw" style="margin-top:10px"><table id="tItems"></table></div>
+    <div class="kpis" style="margin-top:10px">
+      <div class="kpi"><div class="v" id="kTot">–</div><div class="s" id="kTotE"></div><div class="l">Total investment</div></div>
+      <div class="kpi"><div class="v" id="kM2">–</div><div class="s" id="kM2E"></div><div class="l">Investment per m²</div></div>
+    </div>
+    <div id="fxWarn"></div>
+  </details>
+
+  <details class="card" open>
+    <summary>3 · Who funds it <small id="sFund"></small></summary>
+    <div id="funding"></div>
+    <button class="add" id="addInv">＋ Add outside investor</button>
+    <div class="alloc" id="allocBar"></div>
+    <div class="legend" id="allocLeg"></div>
+    <div id="allocMsg"></div>
+  </details>
+
+  <details class="card">
+    <summary>4 · Rental & seasons <small id="sRent"></small></summary>
+    <div class="grid">
+      <div><label>Base nightly rate (USD)</label><input data-k="adr" type="number" inputmode="decimal"></div>
+      <div><label>Base occupancy %</label><input data-k="occ" type="number" inputmode="decimal"><div class="hint">Months outside any season</div></div>
+    </div>
+    <div style="margin:12px 0 6px;font-weight:600;font-size:14px">Seasons</div>
+    <div id="seasons"></div>
+    <button class="add" id="addSeason">＋ Add season</button>
+    <div class="tw" style="margin-top:10px"><table id="tYear"></table></div>
+  </details>
+
+  <details class="card">
+    <summary>5 · Running costs</summary>
+    <div class="grid">
+      <div><label>Platform fee %</label><input data-k="plat" type="number" inputmode="decimal"><div class="hint">Airbnb ≈3%, Booking ≈15%</div></div>
+      <div><label>Monthly running costs (USD)</label><input data-k="opex" type="number" inputmode="decimal"><div class="hint">Utilities, internet, cleaning</div></div>
+      <div class="full"><label>Maintenance reserve % of revenue</label><input data-k="maint" type="number" inputmode="decimal"></div>
+    </div>
+  </details>
+
+  <details class="card">
+    <summary>6 · Operator & owner terms</summary>
+    <div class="grid">
+      <div><label>Operator fee %</label><input data-k="opFee" type="number" inputmode="decimal"></div>
+      <div class="full"><label>Operator fee taken from</label>
+        <div class="seg" data-seg="opBasis"><button data-v="gross">Total revenue</button><button data-v="net">Net (after costs)</button></div></div>
+      <div class="full"><label>Owner gets for the unit itself</label>
+        <div class="seg" data-seg="unitMode"><button data-v="none">Nothing</button><button data-v="pct">% of profit</button><button data-v="fixed">Fixed rent</button></div>
+        <div class="hint">Separate from any return on money the owner invests</div></div>
+      <div class="full" data-show="unitMode=pct"><label>Owner share % of profit (after operator fee)</label><input data-k="unitPct" type="number" inputmode="decimal"></div>
+      <div class="full" data-show="unitMode=fixed"><label>Fixed monthly rent to owner (USD)</label><input data-k="unitFix" type="number" inputmode="decimal"></div>
+    </div>
+  </details>
+
+  <details class="card">
+    <summary>7 · Capital return + interest <small id="sCap"></small></summary>
+    <label class="chk"><input type="checkbox" data-k="cap.on"> Return the investment on a schedule, with interest</label>
+    <div class="hint">Investors get their money back in instalments plus a yearly rate (like a bank rate), and still share the remaining profit.</div>
+    <div data-show="cap.on" style="margin-top:10px">
+      <div class="grid">
+        <div><label>Return capital over (years)</label><input data-k="cap.years" type="number" inputmode="numeric" data-rr="1"></div>
+        <div><label>Interest calculated on</label>
+          <select data-k="cap.basis"><option value="outstanding">Remaining balance</option><option value="repaid">Amount returned that year</option></select></div>
+        <div class="full"><label>Rate</label><div class="seg" data-seg="cap.rateMode"><button data-v="fixed">Fixed</button><button data-v="variable">Variable per year</button></div></div>
+        <div class="full" data-show="cap.rateMode=fixed"><label>Annual rate %</label><input data-k="cap.rate" type="number" inputmode="decimal"></div>
+      </div>
+      <div data-show="cap.rateMode=variable" id="rates" class="g3" style="margin-top:10px"></div>
+      <div class="tw" style="margin-top:10px"><table id="tSched"></table></div>
+    </div>
+  </details>
+
+  <details class="card">
+    <summary>8 · Contract & currency</summary>
+    <div class="grid">
+      <div><label>Operation starts</label><input data-k="start" type="month"></div>
+      <div><label>Contract term (years)</label><input data-k="term" type="number" inputmode="numeric"></div>
+      <div><label>Current USD rate</label><input data-k="fxNow" type="number" inputmode="decimal" placeholder="EGP per $1"><div class="hint">Default for EGP bookings & expenses</div></div>
+      <div><label>Expected USD rate at payout</label><input data-k="fxPayout" type="number" inputmode="decimal" placeholder="optional"><div class="hint">For EGP return % in the plan</div></div>
+    </div>
+  </details>
+
+  <div class="card">
+    <h2>Quick result (plan)</h2>
+    <div class="kpis">
+      <div class="kpi"><div class="v" id="qRev">–</div><div class="l">Revenue, year 1</div></div>
+      <div class="kpi"><div class="v" id="qRoi">–</div><div class="l">Return on investment, yr 1</div></div>
+      <div class="kpi"><div class="v" id="qPay">–</div><div class="l">Payback (whole investment)</div></div>
+      <div class="kpi"><div class="v" id="qOcc">–</div><div class="l">Avg occupancy, yr 1</div></div>
+    </div>
+    <div id="qWarn"></div>
+  </div>
+
+  <div class="card">
+    <h2>Test occupancy (flat, all year)</h2>
+    <div class="tw"><table id="tSens"></table></div>
+  </div>
+  <button class="x" id="delProj" style="width:100%;color:var(--bad);padding:11px">Delete project</button>
+</main>
+
+<!-- ================= ACTUALS ================= -->
+<main id="vActual" class="hide">
+  <div class="card" id="actKpis"></div>
+  <div class="card">
+    <div class="seg" id="actSeg"><button data-a="book" class="on">Bookings</button><button data-a="exp">Expenses</button><button data-a="pay">Payouts</button><button data-a="inv">Investment</button></div>
+  </div>
+
+  <div id="aBook">
+    <details class="card" open><summary>＋ Add booking</summary>
+      <div class="grid">
+        <div><label>Check-in</label><input id="bFrom" type="date"></div>
+        <div><label>Check-out</label><input id="bTo" type="date"></div>
+        <div><label>Rate per night</label><input id="bRate" type="number" inputmode="decimal"></div>
+        <div><label>Currency</label><select id="bCur"><option>USD</option><option>EGP</option></select></div>
+        <div class="full hide" id="bFxW"><label>USD rate</label><input id="bFx" type="number" inputmode="decimal"></div>
+        <div><label>Channel</label><select id="bCh"><option>Airbnb</option><option>Booking</option><option>Direct</option><option>Other</option></select></div>
+        <div><label>Platform fee %</label><input id="bFee" type="number" inputmode="decimal"></div>
+        <div class="full"><label>Guest / note</label><input id="bNote"></div>
+        <div class="full conv" id="bPrev"></div>
+        <div class="full"><button class="btn" id="bAdd">Add booking</button></div>
+      </div>
+    </details>
+    <div class="card"><h2>Bookings</h2><div id="bList"></div></div>
+  </div>
+
+  <div id="aExp" class="hide">
+    <details class="card" open><summary>＋ Add expense</summary>
+      <div class="grid">
+        <div><label>Date</label><input id="eDate" type="date"></div>
+        <div><label>Category</label><select id="eCat"></select></div>
+        <div><label>Amount</label><input id="eAmt" type="number" inputmode="decimal"></div>
+        <div><label>Currency</label><select id="eCur"><option>EGP</option><option>USD</option></select></div>
+        <div class="full" id="eFxW"><label>USD rate</label><input id="eFx" type="number" inputmode="decimal"></div>
+        <div class="full"><label>Note</label><input id="eNote"></div>
+        <div class="full"><button class="btn" id="eAdd">Add expense</button></div>
+      </div>
+    </details>
+    <div class="card"><h2>Expenses</h2><div id="eList"></div></div>
+  </div>
+
+  <div id="aPay" class="hide">
+    <details class="card" open><summary>＋ Record a payout / withdrawal</summary>
+      <div class="grid">
+        <div><label>Date</label><input id="pDate" type="date"></div>
+        <div><label>Paid to</label><select id="pTo"></select></div>
+        <div><label>Amount</label><input id="pAmt" type="number" inputmode="decimal"></div>
+        <div><label>Currency</label><select id="pCur"><option>USD</option><option>EGP</option></select></div>
+        <div class="full"><label>USD rate on that day</label><input id="pFx" type="number" inputmode="decimal"></div>
+        <div class="full conv" id="pPrev"></div>
+        <div class="full"><label>Note</label><input id="pNote"></div>
+        <div class="full"><button class="btn" id="pAdd">Record payout</button></div>
+      </div>
+    </details>
+    <div class="card"><h2>Payouts</h2><div id="pList"></div></div>
+  </div>
+
+  <div id="aInv" class="hide">
+    <div class="card"><h2>Budget vs actual</h2><div class="tw"><table id="iCmp"></table></div><div id="iMsg"></div></div>
+    <div class="card"><h2>Paid in by each party</h2><div class="tw"><table id="iParty"></table></div></div>
+    <details class="card"><summary>＋ Record money paid in</summary>
+      <div class="grid">
+        <div><label>Date</label><input id="cDate" type="date"></div>
+        <div><label>Paid by</label><select id="cBy"></select></div>
+        <div><label>Amount</label><input id="cAmt" type="number" inputmode="decimal"></div>
+        <div><label>Currency</label><select id="cCur"><option>EGP</option><option>USD</option></select></div>
+        <div class="full"><label>USD rate on that day</label><input id="cFx" type="number" inputmode="decimal"></div>
+        <div class="full conv" id="cPrev"></div>
+        <div class="full"><label>Note</label><input id="cNote"></div>
+        <div class="full"><button class="btn" id="cAdd">Record payment in</button></div>
+      </div>
+    </details>
+    <details class="card"><summary>＋ Record investment spending</summary>
+      <div class="grid">
+        <div><label>Date</label><input id="sDate" type="date"></div>
+        <div><label>Item</label><select id="sType"></select></div>
+        <div><label>Amount</label><input id="sAmt" type="number" inputmode="decimal"></div>
+        <div><label>Currency</label><select id="sCur"><option>EGP</option><option>USD</option></select></div>
+        <div class="full"><label>USD rate on that day</label><input id="sFx" type="number" inputmode="decimal"></div>
+        <div class="full conv" id="sPrev"></div>
+        <div class="full"><label>Supplier / note</label><input id="sNote"></div>
+        <div class="full"><button class="btn" id="sAdd">Record spending</button></div>
+      </div>
+    </details>
+    <div class="card"><h2>Money paid in</h2><div id="cList"></div></div>
+    <div class="card"><h2>Investment spending</h2><div id="sList"></div></div>
+  </div>
+</main>
+
+<!-- ================= REPORT ================= -->
+<main id="vRep" class="hide">
+  <div class="card">
+    <h2>Report</h2>
+    <label>Group by</label>
+    <div class="seg" data-seg="view"><button data-v="month">Monthly</button><button data-v="quarter">Quarterly</button><button data-v="year">Annual</button></div>
+    <label style="margin-top:10px">Range</label>
+    <div class="seg" data-seg="range"><button data-v="all">Whole term</button><button data-v="todate" id="rToDate">Start → today</button><button data-v="custom">From – to</button></div>
+    <div class="grid" data-show="range=custom" style="margin-top:10px">
+      <div><label>From</label><input data-k="from" type="month"></div>
+      <div><label>To</label><input data-k="to" type="month"></div>
+    </div>
+  </div>
+  <div class="card" id="repKpis"></div>
+  <div class="card"><h2 id="hPer">Cash flow</h2><div class="tw"><table id="tPer"></table></div></div>
+  <div class="card" id="cCats"><h2>Expenses by category</h2><div class="tw"><table id="tCats"></table></div></div>
+  <div class="card"><h2 id="hParty">Returns by party</h2><div id="parties"></div></div>
+</main>
+
+<div class="bar hide" id="bar">
+  <button id="bSaveT">Save tender</button>
+  <button id="bRun" class="pri">Save as running ›</button>
+  <button id="bCopy">Copy summary</button>
+  <button id="bPdf" class="pri">PDF report</button>
+</div>
+<div id="toast"></div>
+<input type="file" id="restoreFile" accept=".json,application/json" class="hide">
+<div id="modal" class="hide"><div class="mbox"><b id="mTitle"></b><p id="mText"></p><div id="mBtns"></div></div></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const CATS=['Cleaning','Maintenance','Repairs','Utilities','Internet','Supplies','Laundry','Commission','Furniture','Other'];
+const COLORS=['#007aff','#ff9500','#34c759','#af52de','#ff2d55','#5ac8fa','#ffcc00','#5856d6'];
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const usd=v=>(v<-0.5?'-':'')+'$'+Math.round(Math.abs(v)).toLocaleString('en-US');
+const egp=v=>(v<-0.5?'-':'')+'EGP '+Math.round(Math.abs(v)).toLocaleString('en-US');
+const pct=v=>isFinite(v)?(Math.round(v*10)/10)+'%':'–';
+const n=v=>{const x=parseFloat(v);return isFinite(x)?x:0};
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const pad=x=>String(x).padStart(2,'0');
+const todayISO=()=>{const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())};
+const thisMonth=()=>todayISO().slice(0,7);
+function nextMonth(){const d=new Date();d.setMonth(d.getMonth()+1);return d.getFullYear()+'-'+pad(d.getMonth()+1)}
+function monthLabel(k){const [y,m]=k.split('-');return MON[m-1]+' '+y}
+function payStr(m){if(!isFinite(m))return'not within term';if(m<=12)return m+' mo';return (m/12).toFixed(1)+' yrs'}
+function toast(t){const e=$('toast');e.textContent=t;e.classList.add('show');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('show'),2200)}
+
+const ITEM_TYPES=['Finishing','Furniture','Appliances','Electronics & smart lock','Decoration & linens','Photos & listing','Licences & fees','Contingency','Other'];
+const DEF=()=>({id:'p'+uid(),status:'tender',planLocked:false,name:'',location:'',area:120,beds:2,fxInvest:'',
+ items:[{id:uid(),type:'Furniture',desc:'',basis:'total',v:12000,cur:'USD'},{id:uid(),type:'Appliances',desc:'',basis:'total',v:1500,cur:'USD'}],
+ start:nextMonth(),term:3,adr:70,occ:45,plat:3,opex:250,maint:5,fxNow:'',fxPayout:'',
+ seasons:[{name:'Summer',from:5,to:8,occ:75,adr:85},{name:'Winter holidays',from:11,to:0,occ:65,adr:80}],
+ opFee:20,opBasis:'gross',unitMode:'pct',unitPct:30,unitFix:400,
+ owner:{name:'Owner',in:false,mode:'pct',v:20,fx:''},
+ operator:{name:'Operator (me)',in:false,mode:'pct',v:0,fx:''},
+ investors:[{id:uid(),name:'Investor 1',mode:'pct',v:100,fx:''}],
+ cap:{on:false,years:3,rateMode:'fixed',rate:15,rates:[15,15,15],basis:'outstanding'},
+ bookings:[],expenses:[],payouts:[],invSpend:[],invPaid:[],
+ view:'month',range:'all',from:'',to:''});
+
+let pdfOK=true, projects=[], S=null, C=null, store=null, homeTab='running', projTab='plan', actTab='book';
+
+function get(p){return p.split('.').reduce((o,k)=>o==null?o:o[k],S)}
+function set(p,v){const ks=p.split('.');let o=S;for(let i=0;i<ks.length-1;i++)o=o[ks[i]];o[ks.at(-1)]=v}
+
+/* ================= MODEL ================= */
+function itemLocal(it){return it.basis==='m2'?n(it.v)*n(S.area):n(it.v)}
+function itemUsd(it){const f=n(S.fxInvest),l=itemLocal(it);return it.cur==='EGP'?(f?l/f:0):l}
+function itemEgp(it){const f=n(S.fxInvest),l=itemLocal(it);return it.cur==='EGP'?l:l*f}
+function partyFx(p){return n(p.fx)||n(S.fxInvest)}
+function partyList(){
+  const L=[{key:'owner',role:'Owner',name:S.owner.name||'Owner',p:S.owner},{key:'operator',role:'Operator',name:S.operator.name||'Operator',p:S.operator}];
+  S.investors.forEach((p,i)=>{if(!p.id)p.id=uid();L.push({key:'inv:'+p.id,role:'Investor',name:p.name||('Investor '+(i+1)),p})});
+  return L;
+}
+function partyAmounts(p,T){
+  const fx=partyFx(p);let u,e;
+  if(p.mode==='pct'){u=T*n(p.v)/100;e=fx?u*fx:0}
+  else if(p.mode==='egp'){e=n(p.v);u=fx?e/fx:0}
+  else{u=n(p.v);e=fx?u*fx:0}
+  return{u,e,fx};
+}
+function contributors(T){
+  return partyList().filter(x=>x.role==='Investor'||x.p.in).map(x=>{const a=partyAmounts(x.p,T);return{...x,amt:a.u,egp:a.e,fx:a.fx,share:T>0?a.u/T:0}});
+}
+function inSeason(s,m){const f=+s.from,t=+s.to;return f<=t?(m>=f&&m<=t):(m>=f||m<=t)}
+function monthParams(m,flat){
+  if(flat!=null)return{occ:flat,adr:n(S.adr),season:''};
+  for(const s of S.seasons)if(inSeason(s,m))return{occ:n(s.occ),adr:s.adr===''||s.adr==null?n(S.adr):n(s.adr),season:s.name};
+  return{occ:n(S.occ),adr:n(S.adr),season:'Base'};
+}
+function waterfall(gross,platform,costs){
+  const net=gross-platform-costs;
+  const fee=Math.max(0,(S.opBasis==='gross'?gross:Math.max(0,net))*n(S.opFee)/100);
+  const after=net-fee;
+  const unit=S.unitMode==='pct'?Math.max(0,after)*n(S.unitPct)/100:S.unitMode==='fixed'?n(S.unitFix):0;
+  return{net,fee,unit,dist:after-unit};
+}
+function compute(flat,termOverride){
+  const area=n(S.area);
+  const items=S.items.map(it=>({...it,usd:itemUsd(it),egp:itemEgp(it)}));
+  const T=items.reduce((a,x)=>a+x.usd,0);
+  const con=contributors(T);
+  const funded=con.reduce((a,x)=>a+x.amt,0);
+  const termM=Math.max(1,Math.round((termOverride??n(S.term))*12));
+  const [sy,sm]=(S.start||nextMonth()).split('-').map(Number);
+  const capOn=S.cap.on&&T>0, N=Math.max(1,Math.round(n(S.cap.years)*12));
+  let out=T;const months=[];
+  for(let i=0;i<termM;i++){
+    const y=sy+Math.floor((sm-1+i)/12), m=(sm-1+i)%12;
+    const days=new Date(y,m+1,0).getDate();
+    const p=monthParams(m,flat);
+    const gross=p.adr*days*p.occ/100;
+    const platform=gross*n(S.plat)/100, costs=gross*n(S.maint)/100+n(S.opex);
+    const w=waterfall(gross,platform,costs);
+    let principal=0,interest=0,rate=0;
+    if(capOn&&i<N){principal=T/N;rate=S.cap.rateMode==='fixed'?n(S.cap.rate):n(S.cap.rates[Math.floor(i/12)]??S.cap.rate);
+      interest=S.cap.basis==='outstanding'?out*rate/100/12:principal*rate/100;out-=principal}
+    const service=principal+interest, pr=w.dist-service;
+    months.push({i,y,m,key:y+'-'+pad(m+1),days,occ:p.occ,adr:p.adr,season:p.season,nights:days*p.occ/100,gross,platform,costs,...w,principal,interest,rate,service,
+      profit:capOn?Math.max(0,pr):pr,shortfall:capOn&&pr<0?-pr:0,out:Math.max(0,out)});
+  }
+  return{area,items,T,con,funded,months,capOn,N};
+}
+/* ---- actuals ---- */
+function rowUsd(amt,cur,fx){const f=n(fx)||n(S.fxNow);return cur==='EGP'?(f?n(amt)/f:0):n(amt)}
+function rowEgp(amt,cur,fx){const f=n(fx)||n(S.fxNow);return cur==='EGP'?n(amt):n(amt)*f}
+function nightsOf(b){const a=Date.parse(b.from+'T00:00:00Z'),z=Date.parse(b.to+'T00:00:00Z');return isFinite(a)&&isFinite(z)&&z>a?Math.round((z-a)/864e5):0}
+function computeActual(R){
+  const idx=new Map(R.months.map((x,i)=>[x.key,i])), now=thisMonth();
+  const A=R.months.map(x=>({key:x.key,i:x.i,y:x.y,m:x.m,days:x.days,future:x.key>now,gross:0,platform:0,nights:0,costs:0,cats:{},bookings:0}));
+  let outside=0;
+  for(const b of S.bookings){
+    const r=rowUsd(b.rate,b.cur,b.fx),nn=nightsOf(b);let t=Date.parse(b.from+'T00:00:00Z'),first=true;
+    for(let k=0;k<nn;k++,t+=864e5){const d=new Date(t),key=d.getUTCFullYear()+'-'+pad(d.getUTCMonth()+1),i=idx.get(key);
+      if(i==null){outside++;continue}const a=A[i];a.nights++;a.gross+=r;a.platform+=r*n(b.fee)/100;if(first){a.bookings++;first=false}}
+  }
+  for(const e of S.expenses){const i=idx.get((e.date||'').slice(0,7));if(i==null){outside++;continue}const u=rowUsd(e.amt,e.cur,e.fx);A[i].costs+=u;A[i].cats[e.cat]=(A[i].cats[e.cat]||0)+u}
+  A.forEach((a,i)=>{
+    const pm=R.months[i];
+    if(a.future){Object.assign(a,{net:0,fee:0,unit:0,dist:0,principal:0,interest:0,service:0,profit:0,shortfall:0,occ:0});return}
+    const w=waterfall(a.gross,a.platform,a.costs);
+    const pr=w.dist-pm.service;
+    Object.assign(a,w,{principal:pm.principal,interest:pm.interest,service:pm.service,profit:R.capOn?Math.max(0,pr):pr,shortfall:R.capOn&&pr<0?-pr:0,occ:a.nights/a.days*100});
+  });
+  return{A,outside};
+}
+/* ---- ranges & grouping ---- */
+function rangeIdx(R){
+  const ms=R.months;let a=0,b=ms.length-1;
+  if(S.range==='todate'){b=-1;ms.forEach((x,i)=>{if(x.key<=thisMonth())b=i})}
+  if(S.range==='custom'){const f=S.from||ms[0].key,t=S.to||ms.at(-1).key;a=ms.findIndex(x=>x.key>=f);b=-1;ms.forEach((x,i)=>{if(x.key<=t)b=i});if(a<0)a=0}
+  return{a,b,ok:b>=a};
+}
+function groupKey(x,v){v=v||S.view;return v==='year'?String(x.y):v==='quarter'?`Q${Math.floor(x.m/3)+1} ${x.y}`:monthLabel(x.key)}
+function group(list,a,b,fields){
+  const map=new Map();
+  list.slice(a,b+1).forEach(x=>{const k=groupKey(x);if(!map.has(k)){const o={k,days:0};fields.forEach(f=>o[f]=0);map.set(k,o)}const r=map.get(k);r.days+=x.days;fields.forEach(f=>r[f]+=x[f]||0)});
+  return[...map.values()];
+}
+/* ---- parties ---- */
+function payoutUsd(p){return p.cur==='USD'?n(p.amt):(n(p.fx)?n(p.amt)/n(p.fx):0)}
+function payoutEgp(p){return p.cur==='EGP'?n(p.amt):n(p.amt)*n(p.fx)}
+function partyTotals(R,list,a,b){
+  const res=[];const rng=list.slice(a,b+1);
+  const conBy=Object.fromEntries(R.con.map(c=>[c.key,c]));
+  const fromK=list[a]?.key, toK=list[b]?.key;
+  for(const pl of partyList()){
+    if(pl.key==='owner'&&!(S.unitMode!=='none'||S.owner.in))continue;
+    const c=conBy[pl.key];if(pl.role==='Investor'&&!c)continue;
+    const extraKey=pl.key==='owner'?'unit':pl.key==='operator'?'fee':null;
+    const r={key:pl.key,name:pl.name,role:pl.role,amt:c?c.amt:0,egpIn:c?c.egp:0,fxIn:c?c.fx:0,share:c?c.share:0,capital:0,interest:0,profit:0,extra:0,extraLbl:extraKey==='unit'?'For the unit':extraKey==='fee'?'Operator fee':''};
+    rng.forEach(x=>{if(c){r.capital+=x.principal*c.share;r.interest+=x.interest*c.share;r.profit+=x.profit*c.share}if(extraKey)r.extra+=x[extraKey]||0});
+    r.total=r.capital+r.interest+r.profit+r.extra;
+    if(c&&c.amt>0){let cum=0;r.pay=Infinity;for(const x of list){if(x.future)break;cum+=(x.principal+x.interest+x.profit)*c.share;if(cum>=c.amt-0.01){r.pay=x.i+1;break}}
+      const all=list.reduce((s,x)=>s+(x.principal+x.interest+x.profit)*c.share,0);r.invAll=all;r.roi=(all-c.amt)/c.amt/(list.length/12)*100}
+    const pays=(S.payouts||[]).filter(p=>p.party===pl.key);
+    r.paidRange=pays.filter(p=>{const k=(p.date||'').slice(0,7);return(!fromK||k>=fromK)&&(!toK||k<=toK)});
+    r.paidU=r.paidRange.reduce((s,p)=>s+payoutUsd(p),0);r.paidE=r.paidRange.reduce((s,p)=>s+payoutEgp(p),0);
+    r.paidAllU=pays.reduce((s,p)=>s+payoutUsd(p),0);r.paidAllE=pays.reduce((s,p)=>s+payoutEgp(p),0);
+    const ins=(S.invPaid||[]).filter(p=>p.party===pl.key);r.inU=ins.reduce((s,p)=>s+payoutUsd(p),0);r.inE=ins.reduce((s,p)=>s+payoutEgp(p),0);
+    res.push(r);
+  }
+  return res;
+}
+
+/* ================= DYNAMIC FORM PARTS ================= */
+function segHtml(path,opts){return `<div class="seg" data-seg="${path}">${opts.map(o=>`<button data-v="${o[0]}">${o[1]}</button>`).join('')}</div>`}
+function partyRow(path,title,removable){
+  const inv=path.startsWith('investors'),id=path.replace(/\./g,'-');
+  return `<div class="party"><div class="top"><b>${title}</b>${removable?`<button class="x" data-del="${path}">Remove</button>`:''}</div>
+  <div class="grid">
+    <div class="full"><label>Name</label><input data-k="${path}.name" placeholder="Name (English for PDF)"></div>
+    ${inv?'':`<div class="full"><label class="chk"><input type="checkbox" data-k="${path}.in">Puts money into the investment</label></div>`}
+    <div class="full" ${inv?'':`data-show="${path}.in"`}><div class="grid">
+      <div class="full"><label>Enter as</label>${segHtml(path+'.mode',[['pct','% of total'],['val','USD'],['egp','EGP']])}</div>
+      <div><label id="lbl-${id}">Value</label><input data-k="${path}.v" type="number" inputmode="decimal"></div>
+      <div><label>USD rate when paid in</label><input data-k="${path}.fx" type="number" inputmode="decimal" placeholder="project rate"></div>
+      <div class="full conv" id="conv-${id}"></div>
+    </div></div>
+  </div></div>`;
+}
+function renderFunding(){
+  let h=partyRow('owner','Unit owner')+partyRow('operator','Operator');
+  S.investors.forEach((_,i)=>h+=partyRow('investors.'+i,'Outside investor '+(i+1),true));
+  $('funding').innerHTML=h;bindValues($('funding'));
+}
+function renderItems(){
+  $('items').innerHTML=S.items.map((it,i)=>`<div class="party"><div class="top"><select data-k="items.${i}.type" style="font-weight:600">${[...new Set([...ITEM_TYPES,it.type])].map(t=>`<option${t===it.type?' selected':''}>${esc(t)}</option>`).join('')}</select><button class="x" data-del="items.${i}">Remove</button></div>
+    <div class="grid"><div class="full"><input data-k="items.${i}.desc" placeholder="Description (optional)"></div>
+    <div><label id="itl-${i}">Total amount</label><input data-k="items.${i}.v" type="number" inputmode="decimal"></div>
+    <div><label>Currency</label><select data-k="items.${i}.cur"><option>USD</option><option>EGP</option></select></div>
+    <div class="full conv" id="it-${i}"></div></div></div>`).join('')||'<div class="hint" style="margin-bottom:8px">No investment items — unit is ready to rent.</div>';
+  bindValues($('items'));
+}
+function renderSeasons(){
+  const opt=v=>MON.map((m,i)=>`<option value="${i}"${+v===i?' selected':''}>${m}</option>`).join('');
+  $('seasons').innerHTML=S.seasons.map((s,i)=>`<div class="season"><div style="display:flex;gap:8px;margin-bottom:6px"><input data-k="seasons.${i}.name" style="font-weight:600"><button class="x" data-del="seasons.${i}">Remove</button></div>
+    <div class="grid"><div><label>From</label><select data-k="seasons.${i}.from">${opt(s.from)}</select></div><div><label>To</label><select data-k="seasons.${i}.to">${opt(s.to)}</select></div>
+    <div><label>Occupancy %</label><input data-k="seasons.${i}.occ" type="number" inputmode="decimal"></div><div><label>Nightly rate (USD)</label><input data-k="seasons.${i}.adr" type="number" inputmode="decimal" placeholder="base"></div></div></div>`).join('')||'<div class="hint" style="margin-bottom:8px">No seasons — base occupancy used all year.</div>';
+  bindValues($('seasons'));
+}
+function renderRates(){
+  const y=Math.max(1,Math.ceil(n(S.cap.years)));
+  while(S.cap.rates.length<y)S.cap.rates.push(S.cap.rates.at(-1)??n(S.cap.rate));
+  S.cap.rates.length=y;
+  $('rates').innerHTML=S.cap.rates.map((_,i)=>`<div><label>Year ${i+1} %</label><input data-k="cap.rates.${i}" type="number" inputmode="decimal"></div>`).join('');
+  bindValues($('rates'));
+}
+function bindValues(root){root.querySelectorAll('[data-k]').forEach(e=>{const v=get(e.dataset.k);if(e.type==='checkbox')e.checked=!!v;else e.value=v??''})}
+function updateSegs(){document.querySelectorAll('[data-seg]').forEach(s=>{const v=get(s.dataset.seg);s.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===String(v)))})}
+function updateVis(R){
+  document.querySelectorAll('[data-show]').forEach(e=>{const c=e.dataset.show;let ok;
+    if(c.includes('=')){const [p,v]=c.split('=');ok=String(get(p))===v}else ok=!!get(c);
+    e.classList.toggle('hide',!ok)});
+}
+
+/* ================= RENDER: PLAN ================= */
+function update(){
+  if(!S)return;
+  const R=compute();C=R;
+  updateSegs();updateVis(R);
+  const T=R.T, fx=n(S.fxInvest);
+  $('title').textContent=S.name||'Untitled project';
+  $('ptActual').classList.toggle('hide',S.status!=='running');
+  // investment items
+  R.items.forEach((it,i)=>{const el=$('it-'+i);if(!el)return;const loc=itemLocal(it);
+    const ar=n(S.area),other=it.cur==='USD'?(fx?egp(it.egp):''):(fx?usd(it.usd):'');
+    const perM=ar?(it.cur==='USD'?usd(loc/ar):egp(loc/ar))+'/m²'+(fx?' · '+(it.cur==='USD'?egp(it.egp/ar):usd(it.usd/ar))+'/m²':''):'';
+    el.textContent=[other?'= '+other:(fx?'':'add USD rate to convert'),perM].filter(Boolean).join('   ·   ');
+    const l=$('itl-'+i);if(l)l.textContent=`Total amount (${it.cur})`});
+  const A=R.area||0;
+  $('tItems').innerHTML=R.items.length?'<tr><th>Item</th><th>USD</th><th>EGP</th><th>USD/m²</th><th>EGP/m²</th></tr>'+R.items.map(it=>`<tr><td>${esc(it.type)}${it.desc?' · '+esc(it.desc):''}</td><td>${usd(it.usd)}</td><td>${fx?egp(it.egp):'–'}</td><td>${A?usd(it.usd/A):'–'}</td><td>${fx&&A?egp(it.egp/A):'–'}</td></tr>`).join('')+
+    `<tr class="tot"><td>Total</td><td>${usd(T)}</td><td>${fx?egp(T*fx):'–'}</td><td>${A?usd(T/A):'–'}</td><td>${fx&&A?egp(T*fx/A):'–'}</td></tr>`:'';
+  $('kTot').textContent=usd(T);$('kTotE').textContent=fx?egp(T*fx):'';
+  $('kM2').textContent=R.area>0?usd(T/R.area)+'/m²':'–';$('kM2E').textContent=fx&&R.area>0?egp(T*fx/R.area)+'/m²':'';
+  $('sInv').textContent=usd(T)+(fx?' · '+egp(T*fx):'');
+  $('fxWarn').innerHTML=!fx&&R.items.some(i=>i.cur==='EGP')?'<div class="bad">Enter the USD rate to convert EGP items.</div>':(!fx?'<div class="hint">Add the USD rate to see EGP alongside.</div>':'');
+  // party conversions
+  partyList().forEach((pl,i)=>{const path=pl.key==='owner'?'owner':pl.key==='operator'?'operator':'investors.'+S.investors.indexOf(pl.p);const id=path.replace(/\./g,'-');
+    const el=$('conv-'+id);if(!el)return;const a=partyAmounts(pl.p,T),sh=T>0?a.u/T*100:0;
+    el.textContent=[pct(sh),usd(a.u),a.fx?egp(a.e):'(add USD rate for EGP)'].join('  ·  ');
+    const l=$('lbl-'+id);if(l)l.textContent=pl.p.mode==='pct'?'Share %':pl.p.mode==='egp'?'Amount (EGP)':'Amount (USD)'});
+  // allocation
+  const segs=R.con.map((c,i)=>({l:c.name,v:c.amt,c:COLORS[i%COLORS.length]}));
+  const gap=T-R.funded;if(gap>0.5)segs.push({l:'Unfunded',v:gap,c:'transparent'});
+  const tot=Math.max(T,R.funded)||1;
+  $('allocBar').innerHTML=segs.map(s=>`<div style="width:${Math.max(0,s.v)/tot*100}%;background:${s.c}"></div>`).join('');
+  $('allocLeg').innerHTML=segs.filter(s=>s.c!=='transparent').map(s=>`<span><i class="dot" style="background:${s.c}"></i>${esc(s.l)} ${pct(T>0?s.v/T*100:0)}</span>`).join('');
+  $('allocMsg').innerHTML=Math.abs(gap)<0.5?'<div class="hint" style="color:var(--acc)">✓ Fully funded (100%)</div>':gap>0?`<div class="bad">${usd(gap)} (${pct(gap/T*100)}) not funded yet</div>`:`<div class="bad">Over-funded by ${usd(-gap)} (${pct(-gap/T*100)})</div>`;
+  $('sFund').textContent=Math.abs(gap)<0.5?'100% ✓':pct(R.funded/(T||1)*100);
+  // year 1
+  const y1=R.months.slice(0,12),y1g=y1.reduce((a,x)=>a+x.gross,0),y1days=y1.reduce((a,x)=>a+x.days,0),y1n=y1.reduce((a,x)=>a+x.nights,0);
+  $('sRent').textContent=usd(y1g)+'/yr';
+  $('tYear').innerHTML='<tr><th>Month</th><th>Season</th><th>Occ.</th><th>Rate</th><th>Nights</th><th>Revenue</th></tr>'+
+    y1.map(x=>`<tr><td>${MON[x.m]} ${String(x.y).slice(2)}</td><td>${esc(x.season)}</td><td>${x.occ}%</td><td>${usd(x.adr)}</td><td>${x.nights.toFixed(1)}</td><td>${usd(x.gross)}</td></tr>`).join('')+
+    `<tr class="tot"><td>Year 1</td><td></td><td>${pct(y1n/y1days*100)}</td><td></td><td>${y1n.toFixed(0)}</td><td>${usd(y1g)}</td></tr>`;
+  // schedule
+  if(R.capOn){const rows=schedRows(R);
+    $('tSched').innerHTML='<tr><th>Year</th><th>Rate</th><th>Capital back</th><th>Interest</th><th>Total due</th><th>Balance</th></tr>'+
+      rows.map(r=>`<tr><td>Year ${r.y}</td><td>${pct(r.rate)}</td><td>${usd(r.p)}</td><td>${usd(r.i)}</td><td>${usd(r.p+r.i)}</td><td>${usd(r.o)}</td></tr>`).join('')+
+      `<tr class="tot"><td>Total</td><td></td><td>${usd(rows.reduce((a,r)=>a+r.p,0))}</td><td>${usd(rows.reduce((a,r)=>a+r.i,0))}</td><td>${usd(rows.reduce((a,r)=>a+r.p+r.i,0))}</td><td></td></tr>`;
+    $('sCap').textContent='On'}else $('sCap').textContent='Off';
+  // quick
+  const y1d=y1.reduce((a,x)=>a+x.dist,0);
+  $('qRev').textContent=usd(y1g);$('qRoi').textContent=T>0?pct(y1d/T*100):'–';
+  $('qPay').textContent=T>0&&y1d>0?payStr(Math.ceil(T/(y1d/12))):'never';$('qOcc').textContent=pct(y1n/y1days*100);
+  const w=[],sf=R.months.reduce((a,x)=>a+x.shortfall,0);
+  if(sf>0)w.push(`<div class="bad">⚠ Rental profit doesn't cover the capital + interest schedule — short by ${usd(sf)} in total. Lower the rate, stretch the years, or raise occupancy.</div>`);
+  if(R.capOn&&n(S.cap.years)>n(S.term))w.push(`<div class="warn">Capital return (${S.cap.years} yrs) is longer than the contract (${S.term} yrs).</div>`);
+  if(y1d<0)w.push('<div class="bad">⚠ Costs exceed income in year 1.</div>');
+  if(Math.abs(gap)>=0.5)w.push(`<div class="warn">Funding isn't 100% — returns shown are only for the funded part.</div>`);
+  $('qWarn').innerHTML=w.join('');
+  // sensitivity
+  $('tSens').innerHTML='<tr><th>Occupancy</th><th>Revenue/yr</th><th>Profit to capital/yr</th><th>ROI</th><th>Payback</th></tr>'+[20,30,40,50,60,70,80].map(o=>{const s=compute(o,1);const g=s.months.reduce((a,x)=>a+x.gross,0),d=s.months.reduce((a,x)=>a+x.dist,0);
+    return `<tr><td>${o}%</td><td>${usd(g)}</td><td class="${d<0?'neg':''}">${usd(d)}</td><td>${T>0?pct(d/T*100):'–'}</td><td>${T>0&&d>0?payStr(Math.ceil(T/(d/12))):'never'}</td></tr>`}).join('');
+  if(projTab==='report')renderReport();
+  if(projTab==='actual')renderActuals();
+}
+function schedRows(R){const rows=[];for(let k=0;k*12<R.N;k++){const ms=R.months.slice(k*12,Math.min((k+1)*12,R.N));if(!ms.length)break;
+  rows.push({y:k+1,rate:ms[0].rate,p:ms.reduce((a,x)=>a+x.principal,0),i:ms.reduce((a,x)=>a+x.interest,0),o:ms.at(-1).out})}return rows}
+
+/* ================= RENDER: ACTUALS ================= */
+function fillPartySelect(){const L=partyList().filter(p=>p.role==='Investor'||p.p.in||p.key==='operator'||(p.key==='owner'&&S.unitMode!=='none'));
+  const cur=$('pTo').value;$('pTo').innerHTML=L.map(p=>`<option value="${p.key}">${esc(p.name)} (${p.role})</option>`).join('');if(L.some(p=>p.key===cur))$('pTo').value=cur}
+function partyName(key){const p=partyList().find(x=>x.key===key);return p?p.name:'(removed party)'}
+function renderActuals(){
+  const R=C,{A}=computeActual(R),now=thisMonth();
+  const done=A.filter(a=>!a.future),pm=R.months.slice(0,done.length);
+  const s=(l,f)=>l.reduce((t,x)=>t+(x[f]||0),0);
+  const cm=A.find(a=>a.key===now),cp=R.months.find(x=>x.key===now);
+  const aRev=s(done,'gross'),pRev=s(pm,'gross'),aNet=s(done,'dist'),pNet=s(pm,'dist');
+  const dv=(a,p)=>p?`<span class="${a>=p?'pos':'neg'}">${a>=p?'+':''}${pct((a-p)/p*100)}</span>`:'';
+  $('actKpis').innerHTML=`<h2>To date vs plan</h2><div class="kpis">
+    <div class="kpi"><div class="v">${usd(aRev)}</div><div class="s">plan ${usd(pRev)} ${dv(aRev,pRev)}</div><div class="l">Revenue to date</div></div>
+    <div class="kpi"><div class="v">${usd(aNet)}</div><div class="s">plan ${usd(pNet)} ${dv(aNet,pNet)}</div><div class="l">Profit to capital to date</div></div>
+    <div class="kpi"><div class="v">${cm?usd(cm.gross):'–'}</div><div class="s">${cp?'plan '+usd(cp.gross)+' '+dv(cm.gross,cp.gross):'outside contract'}</div><div class="l">This month revenue</div></div>
+    <div class="kpi"><div class="v">${cm?pct(cm.nights/cm.days*100):'–'}</div><div class="s">${cp?'plan '+pct(cp.occ):''}</div><div class="l">This month occupancy</div></div></div>
+    ${done.length?'':'<div class="hint" style="margin-top:8px">Operation start is in the future — set it in Plan › Contract.</div>'}`;
+  ['book','exp','pay','inv'].forEach(t=>$('a'+t[0].toUpperCase()+t.slice(1)).classList.toggle('hide',actTab!==t));
+  renderInvActual(R);
+  document.querySelectorAll('#actSeg button').forEach(b=>b.classList.toggle('on',b.dataset.a===actTab));
+  const sorted=(arr,f)=>[...arr].sort((a,b)=>(b[f]||'').localeCompare(a[f]||''));
+  $('bList').innerHTML=S.bookings.length?sorted(S.bookings,'from').map(b=>{const nn=nightsOf(b),u=rowUsd(b.rate,b.cur,b.fx)*nn;
+    return `<div class="item"><div>${b.from} → ${b.to} · ${nn} nights<small>${esc(b.ch)} · ${b.cur==='EGP'?egp(n(b.rate)):usd(n(b.rate))}/night${b.note?' · '+esc(b.note):''}</small></div><div class="amt">${usd(u)}<small>${b.cur==='EGP'?egp(n(b.rate)*nn):''}</small></div><button class="x" data-rm="bookings:${b.id}">✕</button></div>`}).join(''):'<div class="empty">No bookings yet.</div>';
+  $('eList').innerHTML=S.expenses.length?sorted(S.expenses,'date').map(e=>`<div class="item"><div>${e.date} · ${esc(e.cat)}<small>${esc(e.note||'')}</small></div><div class="amt">${e.cur==='EGP'?egp(n(e.amt)):usd(n(e.amt))}<small>${e.cur==='EGP'?'≈ '+usd(rowUsd(e.amt,e.cur,e.fx)):''}</small></div><button class="x" data-rm="expenses:${e.id}">✕</button></div>`).join(''):'<div class="empty">No expenses yet.</div>';
+  $('pList').innerHTML=S.payouts.length?sorted(S.payouts,'date').map(p=>`<div class="item"><div>${p.date} · ${esc(partyName(p.party))}<small>@ ${n(p.fx)||'–'} EGP/$${p.note?' · '+esc(p.note):''}</small></div><div class="amt">${usd(payoutUsd(p))}<small>${egp(payoutEgp(p))}</small></div><button class="x" data-rm="payouts:${p.id}">✕</button></div>`).join(''):'<div class="empty">No payouts yet.</div>';
+  fillPartySelect();
+  if(!$('bFee').value)$('bFee').value=S.plat;
+  ['bFx','eFx','pFx','cFx','sFx'].forEach(id=>{if(!$(id).value&&S.fxNow)$(id).value=S.fxNow});
+  previewForms();
+}
+function invByType(R){const m=new Map();
+  R.items.forEach(it=>{const r=m.get(it.type)||{t:it.type,bU:0,bE:0,aU:0,aE:0};r.bU+=it.usd;r.bE+=it.egp;m.set(it.type,r)});
+  (S.invSpend||[]).forEach(x=>{const r=m.get(x.type)||{t:x.type,bU:0,bE:0,aU:0,aE:0};r.aU+=payoutUsd(x);r.aE+=payoutEgp(x);m.set(x.type,r)});
+  return[...m.values()]}
+function renderInvActual(R){
+  const rows=invByType(R),sm=k=>rows.reduce((a,r)=>a+r[k],0),A=R.area||0;
+  const tr=(r,c='')=>{const v=r.bU?(r.aU-r.bU)/r.bU*100:NaN;return `<tr class="${c}"><td>${esc(r.t)}</td><td>${usd(r.bU)}</td><td>${usd(r.aU)}</td><td class="${v>0?'neg':'pos'}">${isFinite(v)?(v>0?'+':'')+pct(v):'–'}</td><td>${egp(r.bE)}</td><td>${egp(r.aE)}</td></tr>`};
+  const tot={t:'Total',bU:sm('bU'),aU:sm('aU'),bE:sm('bE'),aE:sm('aE')};
+  $('iCmp').innerHTML='<tr><th>Item</th><th>Budget USD</th><th>Actual USD</th><th>Var.</th><th>Budget EGP</th><th>Actual EGP</th></tr>'+rows.map(r=>tr(r)).join('')+tr(tot,'tot')+
+    (A?`<tr><td>Per m²</td><td>${usd(tot.bU/A)}</td><td>${usd(tot.aU/A)}</td><td></td><td>${egp(tot.bE/A)}</td><td>${egp(tot.aE/A)}</td></tr>`:'');
+  const parties=partyList().filter(p=>p.role==='Investor'||p.p.in||(S.invPaid||[]).some(x=>x.party===p.key));
+  const con=Object.fromEntries(R.con.map(c=>[c.key,c]));let pin=0,pinE=0;
+  $('iParty').innerHTML='<tr><th>Party</th><th>Budget</th><th>Paid USD</th><th>Paid EGP</th><th>Avg rate</th><th>Remaining</th></tr>'+parties.map(pl=>{const c=con[pl.key],ins=(S.invPaid||[]).filter(x=>x.party===pl.key),u=ins.reduce((a,x)=>a+payoutUsd(x),0),e=ins.reduce((a,x)=>a+payoutEgp(x),0);pin+=u;pinE+=e;
+    return `<tr><td>${esc(pl.name)}</td><td>${c?usd(c.amt)+' ('+pct(c.share*100)+')':'–'}</td><td>${usd(u)}</td><td>${egp(e)}</td><td>${u?(e/u).toFixed(2):'–'}</td><td class="${c&&c.amt-u>0.5?'neg':''}">${c?usd(c.amt-u):'–'}</td></tr>`}).join('')+
+    `<tr class="tot"><td>Total</td><td>${usd(R.funded)}</td><td>${usd(pin)}</td><td>${egp(pinE)}</td><td>${pin?(pinE/pin).toFixed(2):'–'}</td><td>${usd(R.funded-pin)}</td></tr>`;
+  const cash=pin-tot.aU;
+  $('iMsg').innerHTML=`<div class="hint" style="margin-top:8px">Paid in ${usd(pin)} − spent ${usd(tot.aU)} = <b>${usd(cash)}</b> ${cash<0?'<span class="neg">(spent more than collected)</span>':'left in hand'}. Profit split stays on the agreed budget shares.</div>`;
+  const srt=(arr)=>[...arr].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  $('cList').innerHTML=(S.invPaid||[]).length?srt(S.invPaid).map(x=>`<div class="item"><div>${x.date} · ${esc(partyName(x.party))}<small>@ ${n(x.fx)} EGP/$${x.note?' · '+esc(x.note):''}</small></div><div class="amt">${usd(payoutUsd(x))}<small>${egp(payoutEgp(x))}</small></div><button class="x" data-rm="invPaid:${x.id}">✕</button></div>`).join(''):'<div class="empty">Nothing recorded yet.</div>';
+  $('sList').innerHTML=(S.invSpend||[]).length?srt(S.invSpend).map(x=>`<div class="item"><div>${x.date} · ${esc(x.type)}<small>${esc(x.note||'')} @ ${n(x.fx)}</small></div><div class="amt">${x.cur==='EGP'?egp(n(x.amt)):usd(n(x.amt))}<small>${x.cur==='EGP'?usd(payoutUsd(x)):egp(payoutEgp(x))}</small></div><button class="x" data-rm="invSpend:${x.id}">✕</button></div>`).join(''):'<div class="empty">Nothing recorded yet.</div>';
+  const cb=$('cBy').value;$('cBy').innerHTML=partyList().map(p=>`<option value="${p.key}">${esc(p.name)} (${p.role})</option>`).join('');if(cb)$('cBy').value=cb;
+  const st=$('sType').value;$('sType').innerHTML=[...new Set([...R.items.map(i=>i.type),...ITEM_TYPES])].map(t=>`<option>${esc(t)}</option>`).join('');if(st)$('sType').value=st;
+  if(!$('cFx').value&&n(S.fxInvest))$('cFx').value=S.fxInvest;if(!$('sFx').value&&n(S.fxInvest))$('sFx').value=S.fxInvest;
+}
+function previewForms(){
+  const nn=nightsOf({from:$('bFrom').value,to:$('bTo').value}),r=n($('bRate').value);
+  $('bFxW').classList.toggle('hide',$('bCur').value!=='EGP');
+  $('eFxW').classList.toggle('hide',$('eCur').value!=='EGP');
+  $('bPrev').textContent=nn?`${nn} nights × ${r} ${$('bCur').value} = ${(nn*r).toLocaleString('en-US')} ${$('bCur').value}`+($('bCur').value==='EGP'&&n($('bFx').value)?` ≈ ${usd(nn*r/n($('bFx').value))}`:''):'';
+  const a=n($('pAmt').value),f=n($('pFx').value);
+  $('pPrev').textContent=a&&f?($('pCur').value==='USD'?`= ${egp(a*f)}`:`= ${usd(a/f)}`):'';
+  [['c','cAmt','cFx','cCur'],['s','sAmt','sFx','sCur']].forEach(([k,am,fx,cu])=>{const a=n($(am).value),f=n($(fx).value);$(k+'Prev').textContent=a&&f?($(cu).value==='USD'?`= ${egp(a*f)}`:`= ${usd(a/f)}`):''});
+}
+
+/* ================= RENDER: REPORT ================= */
+function renderReport(){
+  const R=C,run=S.status==='running';
+  const act=run?computeActual(R).A:null;
+  const {a,b,ok}=rangeIdx(R);
+  const rangeLbl=ok?`${monthLabel(R.months[a].key)} – ${monthLabel(R.months[b].key)}`:'';
+  $('hPer').textContent=(run?'Plan vs actual':'Projected cash flow')+' · '+rangeLbl;
+  $('hParty').textContent='Returns by party · '+rangeLbl;
+  if(!ok){$('tPer').innerHTML='<tr><td>No months in this range — check the dates.</td></tr>';$('parties').innerHTML='';$('repKpis').innerHTML='';$('cCats').classList.add('hide');return}
+  const F=['gross','platform','costs','net','fee','unit','service','profit','nights','shortfall'];
+  const P=group(R.months,a,b,F);
+  const own=S.unitMode!=='none',cap=R.capOn;
+  const sum=(l,f)=>l.reduce((t,x)=>t+(x[f]||0),0);
+  if(!run){
+    const head=`<tr><th>Period</th><th>Occ.</th><th>Revenue</th><th>Costs</th><th>Net</th><th>Operator</th>${own?'<th>Owner (unit)</th>':''}${cap?'<th>Capital+int.</th>':''}<th>Profit split</th></tr>`;
+    const row=(r,cls='')=>`<tr class="${cls}"><td>${esc(r.k)}</td><td>${pct(r.nights/r.days*100)}</td><td>${usd(r.gross)}</td><td>${usd(r.platform+r.costs)}</td><td>${usd(r.net)}</td><td>${usd(r.fee)}</td>${own?`<td>${usd(r.unit)}</td>`:''}${cap?`<td>${usd(r.service)}</td>`:''}<td class="${r.profit<0?'neg':''}">${usd(r.profit)}</td></tr>`;
+    const T={k:'Total',days:sum(P,'days')};F.forEach(f=>T[f]=sum(P,f));
+    $('tPer').innerHTML=head+P.map(r=>row(r)).join('')+row(T,'tot');
+    $('repKpis').innerHTML=`<h2>Plan summary</h2><div class="kpis"><div class="kpi"><div class="v">${usd(R.T)}</div><div class="s">${n(S.fxInvest)?egp(R.T*n(S.fxInvest)):''}</div><div class="l">Total investment</div></div><div class="kpi"><div class="v">${usd(T.gross)}</div><div class="l">Revenue in range</div></div><div class="kpi"><div class="v">${pct(T.nights/T.days*100)}</div><div class="l">Avg occupancy</div></div><div class="kpi"><div class="v">${usd(T.profit+T.service)}</div><div class="l">To capital providers</div></div></div>`;
+    $('cCats').classList.add('hide');
+  }else{
+    const AP=group(act,a,b,[...F,'bookings']);
+    const head='<tr><th>Period</th><th>Occ. plan</th><th>Occ. actual</th><th>Revenue plan</th><th>Revenue actual</th><th>Var.</th><th>Costs plan</th><th>Costs actual</th><th>Net plan</th><th>Net actual</th></tr>';
+    const row=(p,x,cls='')=>{const v=p.gross?(x.gross-p.gross)/p.gross*100:NaN;return `<tr class="${cls}"><td>${esc(p.k)}</td><td>${pct(p.nights/p.days*100)}</td><td>${pct(x.nights/x.days*100)}</td><td>${usd(p.gross)}</td><td>${usd(x.gross)}</td><td class="${v<0?'neg':'pos'}">${isFinite(v)?(v>0?'+':'')+pct(v):'–'}</td><td>${usd(p.platform+p.costs)}</td><td>${usd(x.platform+x.costs)}</td><td>${usd(p.net)}</td><td class="${x.net<0?'neg':''}">${usd(x.net)}</td></tr>`};
+    const TP={k:'Total',days:sum(P,'days')},TA={days:sum(AP,'days')};F.forEach(f=>{TP[f]=sum(P,f);TA[f]=sum(AP,f)});
+    $('tPer').innerHTML=head+P.map((p,i)=>row(p,AP[i])).join('')+row(TP,TA,'tot');
+    const nb=sum(AP,'bookings');
+    const vv=TP.gross?(TA.gross-TP.gross)/TP.gross*100:NaN;
+    $('repKpis').innerHTML=`<h2>Actual vs plan</h2><div class="kpis"><div class="kpi"><div class="v">${usd(TA.gross)}</div><div class="s">plan ${usd(TP.gross)} · <span class="${vv<0?'neg':'pos'}">${isFinite(vv)?(vv>0?'+':'')+pct(vv):''}</span></div><div class="l">Revenue</div></div>
+      <div class="kpi"><div class="v">${pct(TA.nights/TA.days*100)}</div><div class="s">plan ${pct(TP.nights/TP.days*100)} · ${TA.nights} nights, ${nb} bookings</div><div class="l">Occupancy</div></div>
+      <div class="kpi"><div class="v">${usd(TA.platform+TA.costs)}</div><div class="s">plan ${usd(TP.platform+TP.costs)}</div><div class="l">Expenses incl. platform</div></div>
+      <div class="kpi"><div class="v">${usd(TA.net)}</div><div class="s">plan ${usd(TP.net)}</div><div class="l">Net operating profit</div></div></div>
+      ${act.slice(a,b+1).some(x=>x.future)?'<div class="hint" style="margin-top:6px">Future months show 0 actual — use “Start → today” to compare only elapsed months.</div>':''}`;
+    const cats={};act.slice(a,b+1).forEach(x=>{for(const k in x.cats)cats[k]=(cats[k]||0)+x.cats[k]});
+    const ck=Object.keys(cats).sort((x,y)=>cats[y]-cats[x]);
+    $('cCats').classList.remove('hide');
+    $('tCats').innerHTML='<tr><th>Category</th><th>Actual</th><th>Share</th></tr>'+(ck.length?ck.map(k=>`<tr><td>${esc(k)}</td><td>${usd(cats[k])}</td><td>${pct(cats[k]/TA.costs*100)}</td></tr>`).join(''):'<tr><td colspan="3">No expenses in this range.</td></tr>')+
+      `<tr><td>Platform fees</td><td>${usd(TA.platform)}</td><td></td></tr><tr class="tot"><td>Total actual</td><td>${usd(TA.platform+TA.costs)}</td><td></td></tr><tr><td>Plan (platform + reserve + running)</td><td>${usd(TP.platform+TP.costs)}</td><td></td></tr>`;
+  }
+  renderParties(R,run?act:R.months,a,b,run);
+}
+function renderParties(R,list,a,b,run){
+  const PT=partyTotals(R,list,a,b), planPT=run?partyTotals(R,R.months,a,b):null;
+  const fxP=n(S.fxPayout);
+  $('parties').innerHTML=PT.map((p,i)=>{
+    const pl=planPT?planPT[i]:null;
+    let h=`<div class="pc"><div class="h"><b>${esc(p.name)}</b><span>${p.role}${p.amt>0?`<br>invested ${usd(p.amt)} (${pct(p.share*100)})`:''}</span></div>`;
+    if(p.amt>0)h+=`<div class="row"><span>${run?'Budget share':'Pays in'}</span><span>${usd(p.amt)}${p.fxIn?' · '+egp(p.egpIn)+' @ '+p.fxIn:''}</span></div>`;
+    h+=`<div class="sub">${run?'Earned (actual)':'Projected'}</div>`;
+    if(p.extraLbl)h+=`<div class="row"><span>${p.extraLbl}</span><span>${usd(p.extra)}</span></div>`;
+    if(p.amt>0&&R.capOn)h+=`<div class="row"><span>Capital returned</span><span>${usd(p.capital)}</span></div><div class="row"><span>Interest</span><span>${usd(p.interest)}</span></div>`;
+    if(p.amt>0)h+=`<div class="row"><span>Profit share</span><span>${usd(p.profit)}</span></div>`;
+    h+=`<div class="row t"><span>Total ${run?'earned':'in period'}</span><span>${usd(p.total)}${pl?`<br><small style="font-weight:400;color:var(--mut)">plan ${usd(pl.total)}</small>`:''}</span></div>`;
+    if(!run&&p.amt>0){
+      h+=`<div class="row"><span>Avg yearly ROI (USD, full term)</span><span>${pct(p.roi)}</span></div><div class="row"><span>Money back in</span><span>${payStr(p.pay)}</span></div>`;
+      if(fxP&&p.egpIn){const outE=p.invAll*fxP;h+=`<div class="row"><span>Full term in EGP @ ${fxP}</span><span>${egp(outE)}</span></div><div class="row"><span>Return in USD / EGP</span><span>${pct((p.invAll-p.amt)/p.amt*100)} / ${pct((outE-p.egpIn)/p.egpIn*100)}</span></div>`}
+    }
+    if(run&&(p.inU>0||p.amt>0))h+=`<div class="row"><span>Paid in (actual)</span><span>${p.inU>0?usd(p.inU)+' · '+egp(p.inE):'nothing recorded yet'}</span></div>`;
+    if(run){
+      const bU=p.inU||p.amt,bE=p.inU?p.inE:p.egpIn;
+      h+=`<div class="sub">Withdrawn</div><div class="row"><span>In this range</span><span>${usd(p.paidU)} · ${egp(p.paidE)}</span></div>`;
+      p.paidRange.slice(0,6).forEach(x=>h+=`<div class="row"><span>${x.date} @ ${n(x.fx)}</span><span>${usd(payoutUsd(x))} · ${egp(payoutEgp(x))}</span></div>`);
+      if(bU>0&&p.paidAllU>0){const gu=(p.paidAllU-bU)/bU*100,ge=bE?(p.paidAllE-bE)/bE*100:NaN;
+        h+=`<div class="row"><span>All withdrawals to date</span><span>${usd(p.paidAllU)} · ${egp(p.paidAllE)}</span></div>
+        <div class="row"><span>Recovered of money in</span><span>${pct(p.paidAllU/bU*100)} USD${bE?' · '+pct(p.paidAllE/bE*100)+' EGP':''}</span></div>
+        <div class="row"><span>Gain so far</span><span class="${gu<0?'neg':'pos'}">${pct(gu)} USD</span></div>${isFinite(ge)?`<div class="row"><span></span><span class="${ge<0?'neg':'pos'}">${pct(ge)} EGP</span></div>`:''}`}
+      const owed=p.total-p.paidU;h+=`<div class="row t"><span>Still owed (range)</span><span class="${owed<0?'neg':''}">${usd(owed)}</span></div>`;
+    }
+    return h+'</div>'}).join('');
+}
+
+/* ================= HOME ================= */
+function projSummary(p){
+  const keep=S;S=p;try{const R=compute(),y1=R.months.slice(0,12);
+    const out={T:R.T,y1g:y1.reduce((a,x)=>a+x.gross,0),y1d:y1.reduce((a,x)=>a+x.dist,0)};
+    if(p.status==='running'){const A=computeActual(R).A,done=A.filter(a=>!a.future),pm=R.months.slice(0,done.length),now=thisMonth();
+      out.aRev=done.reduce((s,x)=>s+x.gross,0);out.pRev=pm.reduce((s,x)=>s+x.gross,0);out.aNet=done.reduce((s,x)=>s+x.dist,0);out.pNet=pm.reduce((s,x)=>s+x.dist,0);
+      const cm=A.find(x=>x.key===now),cp=R.months.find(x=>x.key===now);out.mRev=cm?cm.gross:0;out.mPlan=cp?cp.gross:0;out.mOcc=cm?cm.nights/cm.days*100:0}
+    return out}finally{S=keep}
+}
+function renderHome(){
+  document.querySelectorAll('#homeTabs button').forEach(b=>b.classList.toggle('on',b.dataset.ht===homeTab));
+  let lb=0;try{lb=+localStorage.getItem('rentcalc.lastBackup')||0}catch(e){}
+  const days=lb?Math.floor((Date.now()-lb)/864e5):null;
+  $('backupHint').innerHTML=projects.length?(days===null?'<span class="warn">⚠ No backup yet — tap the ◐ button › Back up all data.</span>':days>7?`<span class="warn">Last backup ${days} days ago — time for a new one.</span>`:`Last backup: ${days?days+' days ago':'today'}`):'';
+  const dash=homeTab==='dash';$('vHome').classList.toggle('hide',dash);$('vDash').classList.toggle('hide',!dash);updateBar();
+  if(dash){renderDash();return}
+  const list=projects.filter(p=>(p.status||'tender')===homeTab).sort((a,b)=>(b.t||0)-(a.t||0));
+  const sums=list.map(projSummary);
+  if(homeTab==='running'&&list.length){
+    const t=k=>sums.reduce((s,x)=>s+(x[k]||0),0);
+    const v=(a,p)=>p?`<span class="${a>=p?'pos':'neg'}">${a>=p?'+':''}${pct((a-p)/p*100)}</span>`:'';
+    $('portfolio').innerHTML=`<h2>Portfolio · ${list.length} running unit${list.length>1?'s':''}</h2><div class="kpis">
+      <div class="kpi"><div class="v">${usd(t('mRev'))}</div><div class="s">plan ${usd(t('mPlan'))} ${v(t('mRev'),t('mPlan'))}</div><div class="l">Revenue this month</div></div>
+      <div class="kpi"><div class="v">${usd(t('aRev'))}</div><div class="s">plan ${usd(t('pRev'))} ${v(t('aRev'),t('pRev'))}</div><div class="l">Revenue to date</div></div>
+      <div class="kpi"><div class="v">${usd(t('aNet'))}</div><div class="s">plan ${usd(t('pNet'))}</div><div class="l">Profit to capital to date</div></div>
+      <div class="kpi"><div class="v">${usd(t('T'))}</div><div class="l">Capital deployed</div></div></div>`;
+    $('portfolio').classList.remove('hide');
+  }else $('portfolio').classList.add('hide');
+  $('projList').innerHTML=list.length?list.map((p,i)=>{const s=sums[i];
+    return `<button class="proj" data-open="${p.id}"><div class="t"><b>${esc(p.name||'Untitled')}</b><span class="badge ${p.status==='running'?'run':''}">${p.status==='running'?'Running':'Tender'}</span></div>
+    <small>${esc([p.location,p.area+' m²',p.beds+' BR'].filter(Boolean).join(' · '))}</small>
+    <div class="m">${p.status==='running'?`<div><span>This month</span><br><b>${usd(s.mRev)}</b> <span>/ ${usd(s.mPlan)}</span></div><div><span>Occ.</span><br><b>${pct(s.mOcc)}</b></div><div><span>To date</span><br><b>${usd(s.aRev)}</b> <span>/ ${usd(s.pRev)}</span></div>`
+      :`<div><span>Investment</span><br><b>${usd(s.T)}</b></div><div><span>Revenue yr 1</span><br><b>${usd(s.y1g)}</b></div><div><span>ROI yr 1</span><br><b>${s.T>0?pct(s.y1d/s.T*100):'–'}</b></div>`}</div></button>`}).join('')
+    :`<div class="empty">${homeTab==='running'?'No running projects. Open a tender and tap “Save as running”.':'No tenders yet. Tap “New project”.'}</div>`;
+}
+
+/* ================= DASHBOARD ================= */
+let D={sel:'running',ids:[],range:'ytd',from:'',to:'',view:'month'};
+try{Object.assign(D,JSON.parse(localStorage.getItem('rentcalc.dash')||'{}'))}catch(e){}
+function saveD(){try{localStorage.setItem('rentcalc.dash',JSON.stringify(D))}catch(e){}}
+function dashWindow(){const tm=thisMonth();
+  if(D.range==='month')return[tm,tm];if(D.range==='ytd')return[tm.slice(0,4)+'-01',tm];if(D.range==='todate')return['0000-00',tm];
+  return[D.from||'0000-00',D.to||'9999-99']}
+function dashProjects(){return projects.filter(p=>!p._new&&(D.sel==='all'||(D.sel==='running'?p.status==='running':D.ids.includes(p.id))))}
+function dashData(){
+  const [f,t]=dashWindow(),per=new Map(),rows=[];const keep=S;
+  try{for(const p of dashProjects()){S=p;migrate(p);const R=compute(),run=p.status==='running',A=run?computeActual(R).A:null;
+    const r={p,run,T:R.T,spent:run?(p.invSpend||[]).reduce((a,x)=>a+payoutUsd(x),0):0,paidIn:run?(p.invPaid||[]).reduce((a,x)=>a+payoutUsd(x),0):0,
+      pG:0,aG:0,pN:0,aN:0,pD:0,aD:0,pC:0,aC:0,pNet:0,aNet:0,pFee:0,aFee:0,tG:0,tN:0,tD:0,tFee:0,tNet:0};
+    R.months.forEach((x,i)=>{if(x.key<f||x.key>t)return;const k=groupKey(x,D.view);
+      if(!per.has(k))per.set(k,{k,ord:x.key,pG:0,aG:0,pN:0,aN:0,pD:0,aD:0,pC:0,aC:0,pNet:0,aNet:0,pFee:0,aFee:0,tG:0});const g=per.get(k);
+      if(run){const a=A[i];
+        r.pG+=x.gross;r.pN+=x.nights;r.pD+=x.days;r.pC+=x.platform+x.costs;r.pNet+=x.net;r.pFee+=x.fee;
+        g.pG+=x.gross;g.pN+=x.nights;g.pD+=x.days;g.pC+=x.platform+x.costs;g.pNet+=x.net;g.pFee+=x.fee;
+        if(!a.future){r.aG+=a.gross;r.aN+=a.nights;r.aD+=a.days;r.aC+=a.platform+a.costs;r.aNet+=a.net;r.aFee+=a.fee;
+          g.aG+=a.gross;g.aN+=a.nights;g.aD+=a.days;g.aC+=a.platform+a.costs;g.aNet+=a.net;g.aFee+=a.fee}}
+      else{r.tG+=x.gross;r.tN+=x.nights;r.tD+=x.days;r.tFee+=x.fee;r.tNet+=x.net;g.tG+=x.gross}});
+    rows.push(r)}}finally{S=keep}
+  return{rows,per:[...per.values()].sort((a,b)=>a.ord.localeCompare(b.ord)),f,t};
+}
+function dashRangeLabel(f,t){const lo=f==='0000-00'?'Start':monthLabel(f),hi=t==='9999-99'?'End':monthLabel(t);return lo===hi?lo:lo+' – '+hi}
+function renderDash(){
+  document.querySelectorAll('#dSel button').forEach(b=>b.classList.toggle('on',b.dataset.ds===D.sel));
+  document.querySelectorAll('#dRange button').forEach(b=>b.classList.toggle('on',b.dataset.dr===D.range));
+  document.querySelectorAll('#dView button').forEach(b=>b.classList.toggle('on',b.dataset.dv===D.view));
+  $('dCustom').classList.toggle('hide',D.range!=='custom');$('dFrom').value=D.from;$('dTo').value=D.to;
+  $('dPick').classList.toggle('hide',D.sel!=='custom');
+  const all=projects.filter(p=>!p._new);
+  $('dPick').innerHTML=all.length?all.map(p=>`<label class="chk" style="padding:6px 0"><input type="checkbox" data-dp="${p.id}"${D.ids.includes(p.id)?' checked':''}>${esc(p.name||'Untitled')} <span class="badge ${p.status==='running'?'run':''}" style="margin-left:8px">${p.status==='running'?'Running':'Tender'}</span></label>`).join(''):'<div class="hint">No saved projects yet.</div>';
+  const {rows,per,f,t}=dashData(),sm=k=>rows.reduce((a,r)=>a+r[k],0),run=rows.filter(r=>r.run),ten=rows.filter(r=>!r.run);
+  const dv=(a,p)=>p?`<span class="${a>=p?'pos':'neg'}">${a>=p?'+':''}${pct((a-p)/p*100)}</span>`:'';
+  const rl=dashRangeLabel(f,t);
+  if(!rows.length){$('dKpis').innerHTML='<div class="empty">No projects selected.</div>';['dPer','dProj','dInv'].forEach(i=>$(i).innerHTML='');return}
+  const aG=sm('aG'),pG=sm('pG');
+  $('dKpis').innerHTML=`<h2>${run.length} running${ten.length?' · '+ten.length+' tender':''} · ${rl}</h2><div class="kpis">
+    <div class="kpi"><div class="v">${usd(aG)}</div><div class="s">plan ${usd(pG)} ${dv(aG,pG)}</div><div class="l">Revenue (running)</div></div>
+    <div class="kpi"><div class="v">${pct(sm('aN')/(sm('aD')||1)*100)}</div><div class="s">plan ${pct(sm('pN')/(sm('pD')||1)*100)} · ${Math.round(sm('aN'))} nights</div><div class="l">Occupancy</div></div>
+    <div class="kpi"><div class="v">${usd(sm('aNet'))}</div><div class="s">plan ${usd(sm('pNet'))} · costs ${usd(sm('aC'))}</div><div class="l">Net operating profit</div></div>
+    <div class="kpi"><div class="v">${usd(sm('aFee'))}</div><div class="s">plan ${usd(sm('pFee'))} ${dv(sm('aFee'),sm('pFee'))}</div><div class="l">My operator fees</div></div>
+    <div class="kpi"><div class="v">${usd(run.reduce((a,r)=>a+r.T,0))}</div><div class="s">actual spent ${usd(sm('spent'))}</div><div class="l">Capital (running)</div></div>
+    ${ten.length?`<div class="kpi"><div class="v">${usd(sm('tG'))}</div><div class="s">capital ${usd(ten.reduce((a,r)=>a+r.T,0))} · fees ${usd(sm('tFee'))}</div><div class="l">Tender pipeline revenue</div></div>`:''}</div>`;
+  $('dhPer').textContent='By period · '+rl;
+  $('dPer').innerHTML='<tr><th>Period</th><th>Rev. plan</th><th>Rev. actual</th><th>Var.</th><th>Occ. plan</th><th>Occ. act.</th><th>Net plan</th><th>Net act.</th><th>My fees</th>'+(ten.length?'<th>Tender proj.</th>':'')+'</tr>'+
+    per.map(g=>`<tr><td>${esc(g.k)}</td><td>${usd(g.pG)}</td><td>${usd(g.aG)}</td><td>${dv(g.aG,g.pG)}</td><td>${g.pD?pct(g.pN/g.pD*100):'–'}</td><td>${g.aD?pct(g.aN/g.aD*100):'–'}</td><td>${usd(g.pNet)}</td><td class="${g.aNet<0?'neg':''}">${usd(g.aNet)}</td><td>${usd(g.aFee)}</td>${ten.length?`<td>${usd(g.tG)}</td>`:''}</tr>`).join('')+
+    `<tr class="tot"><td>Total</td><td>${usd(pG)}</td><td>${usd(aG)}</td><td>${dv(aG,pG)}</td><td>${pct(sm('pN')/(sm('pD')||1)*100)}</td><td>${pct(sm('aN')/(sm('aD')||1)*100)}</td><td>${usd(sm('pNet'))}</td><td>${usd(sm('aNet'))}</td><td>${usd(sm('aFee'))}</td>${ten.length?`<td>${usd(sm('tG'))}</td>`:''}</tr>`;
+  $('dProj').innerHTML='<tr><th>Project</th><th>Status</th><th>Rev. plan</th><th>Rev. actual</th><th>Var.</th><th>Occ.</th><th>Net act.</th><th>My fees</th></tr>'+rows.map(r=>r.run
+    ?`<tr><td>${esc(r.p.name||'Untitled')}</td><td>Running</td><td>${usd(r.pG)}</td><td>${usd(r.aG)}</td><td>${dv(r.aG,r.pG)}</td><td>${r.aD?pct(r.aN/r.aD*100):'–'}</td><td>${usd(r.aNet)}</td><td>${usd(r.aFee)}</td></tr>`
+    :`<tr><td>${esc(r.p.name||'Untitled')}</td><td>Tender</td><td>${usd(r.tG)}</td><td>–</td><td></td><td>${r.tD?pct(r.tN/r.tD*100)+' (plan)':'–'}</td><td>${usd(r.tNet)} (plan)</td><td>${usd(r.tFee)} (plan)</td></tr>`).join('');
+  $('dInv').innerHTML='<tr><th>Project</th><th>Budget</th><th>Spent</th><th>Var.</th><th>Paid in</th></tr>'+rows.map(r=>`<tr><td>${esc(r.p.name||'Untitled')}</td><td>${usd(r.T)}</td><td>${r.run?usd(r.spent):'–'}</td><td>${r.run&&r.spent?`<span class="${r.spent>r.T?'neg':'pos'}">${pct((r.spent-r.T)/(r.T||1)*100)}</span>`:''}</td><td>${r.run?usd(r.paidIn):'–'}</td></tr>`).join('')+
+    `<tr class="tot"><td>Total</td><td>${usd(sm('T'))}</td><td>${usd(sm('spent'))}</td><td></td><td>${usd(sm('paidIn'))}</td></tr>`;
+}
+function dashText(){const {rows,f,t}=dashData(),sm=k=>rows.reduce((a,r)=>a+r[k],0);
+  const L=[`*Portfolio summary* · ${dashRangeLabel(f,t)}`,`${rows.filter(r=>r.run).length} running, ${rows.filter(r=>!r.run).length} tender`,'',
+    `Revenue: ${usd(sm('aG'))} (plan ${usd(sm('pG'))})`,`Occupancy: ${pct(sm('aN')/(sm('aD')||1)*100)} (plan ${pct(sm('pN')/(sm('pD')||1)*100)})`,`Net: ${usd(sm('aNet'))} (plan ${usd(sm('pNet'))})`,`My operator fees: ${usd(sm('aFee'))} (plan ${usd(sm('pFee'))})`,''];
+  rows.forEach(r=>L.push(r.run?`• ${r.p.name}: ${usd(r.aG)} / plan ${usd(r.pG)}, occ ${r.aD?pct(r.aN/r.aD*100):'–'}`:`• ${r.p.name} (tender): projected ${usd(r.tG)}`));
+  return L.join('\n')}
+async function dashPdf(){
+  if(!window.jspdf)return toast('PDF library not loaded');
+  const {rows,per,f,t}=dashData();if(!rows.length)return toast('No projects selected');
+  const sm=k=>rows.reduce((a,r)=>a+r[k],0),{jsPDF}=window.jspdf,d=new jsPDF({unit:'pt',format:'a4'}),W=d.internal.pageSize.getWidth(),G=[15,92,77];
+  const head={fillColor:G,textColor:255,fontStyle:'bold',fontSize:8},bs={fontSize:8},M={left:36,right:36},vv=(a,p)=>p?pct((a-p)/p*100):'–';
+  d.setFillColor(...G);d.rect(0,0,W,66,'F');d.setTextColor(255);d.setFontSize(18);d.text('Portfolio summary',36,34);d.setFontSize(10);d.text(`${dashRangeLabel(f,t)} · ${rows.length} project${rows.length>1?'s':''}`,36,52);
+  const T=(y,h,body,cs)=>{if(y>740){d.addPage();y=40}d.autoTable({startY:y,head:[h],body,headStyles:head,bodyStyles:bs,margin:M,columnStyles:cs});return d.lastAutoTable.finalY+16};
+  const R_=k=>Object.fromEntries([...Array(k)].map((_,i)=>[i+1,{halign:'right'}]));
+  let y=84;
+  y=T(y,['Summary','Actual','Plan','Var.'],[['Revenue',usd(sm('aG')),usd(sm('pG')),vv(sm('aG'),sm('pG'))],['Occupancy',pct(sm('aN')/(sm('aD')||1)*100),pct(sm('pN')/(sm('pD')||1)*100),''],['Costs',usd(sm('aC')),usd(sm('pC')),vv(sm('aC'),sm('pC'))],['Net operating profit',usd(sm('aNet')),usd(sm('pNet')),vv(sm('aNet'),sm('pNet'))],['My operator fees',usd(sm('aFee')),usd(sm('pFee')),vv(sm('aFee'),sm('pFee'))],['Investment (budget / spent)',usd(sm('spent')),usd(sm('T')),'']],R_(3));
+  y=T(y,['Period','Rev. plan','Rev. actual','Var.','Occ. plan','Occ. act.','Net plan','Net act.','My fees'],per.map(g=>[g.k,usd(g.pG),usd(g.aG),vv(g.aG,g.pG),g.pD?pct(g.pN/g.pD*100):'–',g.aD?pct(g.aN/g.aD*100):'–',usd(g.pNet),usd(g.aNet),usd(g.aFee)]),R_(8));
+  y=T(y,['Project','Status','Rev. plan','Rev. actual','Occ.','Net act.','My fees','Budget','Spent'],rows.map(r=>r.run?[r.p.name||'Untitled','Running',usd(r.pG),usd(r.aG),r.aD?pct(r.aN/r.aD*100):'–',usd(r.aNet),usd(r.aFee),usd(r.T),usd(r.spent)]:[r.p.name||'Untitled','Tender',usd(r.tG),'–',pct(r.tN/(r.tD||1)*100),usd(r.tNet)+' plan',usd(r.tFee)+' plan',usd(r.T),'–']),R_(8));
+  d.setFontSize(7.5);d.setTextColor(120);d.text(`Internal summary. Actuals from recorded bookings and expenses; plan = each project's locked budget. Prepared ${new Date().toLocaleDateString('en-GB')}.`,36,Math.min(y,800));
+  await saveFile(d.output('blob'),'Portfolio summary '+todayISO()+'.pdf','application/pdf');
+}
+document.addEventListener('click',e=>{const t=e.target;
+  const ds=t.closest('[data-ds]');if(ds){D.sel=ds.dataset.ds;if(D.sel==='custom'&&!D.ids.length)D.ids=projects.filter(p=>p.status==='running').map(p=>p.id);saveD();renderDash();return}
+  const dr=t.closest('[data-dr]');if(dr){D.range=dr.dataset.dr;saveD();renderDash();return}
+  const dvb=t.closest('[data-dv]');if(dvb){D.view=dvb.dataset.dv;saveD();renderDash();return}});
+document.addEventListener('change',e=>{const t=e.target;
+  if(t.dataset&&t.dataset.dp){D.ids=t.checked?[...new Set([...D.ids,t.dataset.dp])]:D.ids.filter(x=>x!==t.dataset.dp);saveD();renderDash()}
+  if(t.id==='dFrom'||t.id==='dTo'){D[t.id==='dFrom'?'from':'to']=t.value;saveD();renderDash()}});
+
+/* ================= NAVIGATION ================= */
+function goHome(){if(S&&(unsaved||S._new)){modal('Save changes?',S._new?'This new project has not been saved yet.':'You have unsaved changes to this '+(S.status==='running'?'budget':'tender')+'.',[
+    {l:S.status==='running'?'Save':'Save tender',c:'pri',f:async()=>{await saveProject('Saved');showHome()}},{l:'Discard',c:'danger',f:()=>{discard();showHome()}},{l:'Cancel'}]);return}showHome()}
+function showHome(){document.body.classList.remove('inproj');if(S&&projects.includes(S))homeTab=S.status||'tender';S=null;C=null;unsaved=false;setSaveState();['vHome','vDash','vPlan','vActual','vRep'].forEach(v=>$(v).classList.toggle('hide',v!=='vHome'));
+  $('homeTabs').classList.remove('hide');$('projTabs').classList.add('hide');$('bBack').classList.add('hide');$('bar').classList.add('hide');$('title').textContent='Rentals';renderHome();window.scrollTo(0,0)}
+function openProject(p){document.body.classList.add('inproj');S=p;migrate(S);snapshot=JSON.stringify(S);unsaved=false;setSaveState();projTab='plan';$('homeTabs').classList.add('hide');$('projTabs').classList.remove('hide');$('bBack').classList.remove('hide');$('vDash').classList.add('hide');
+  renderItems();renderFunding();renderSeasons();renderRates();bindValues(document);showTab('plan')}
+function showTab(t){if(t==='actual'&&S.status!=='running')t='plan';projTab=t;
+  document.querySelectorAll('#projTabs button').forEach(b=>b.classList.toggle('on',b.dataset.pt===t));
+  $('vHome').classList.add('hide');$('vDash').classList.add('hide');$('vPlan').classList.toggle('hide',t!=='plan');$('vActual').classList.toggle('hide',t!=='actual');$('vRep').classList.toggle('hide',t!=='report');
+  if(t==='report'&&S.status==='running'&&S.range==='all'){S.range='todate'}
+  update();applyLock();updateBar();window.scrollTo(0,0)}
+function migrate(p){
+  if(!p.items&&p.finM2!==undefined){const c=p.cond||'furn',cur=p.costCur||'USD';p.items=[];
+    if(c==='fin'||c==='finfurn')p.items.push({id:uid(),type:'Finishing',desc:'',basis:'m2',v:n(p.finM2),cur});
+    if(c==='furn'||c==='finfurn')p.items.push({id:uid(),type:'Furniture',desc:'',basis:'m2',v:n(p.furnM2),cur});
+    if(n(p.other))p.items.push({id:uid(),type:'Other',desc:'',basis:'total',v:n(p.other),cur});}
+  ['cond','finM2','furnM2','other','costCur'].forEach(k=>delete p[k]);
+  (p.items||[]).forEach(it=>{if(it.basis==='m2'){it.v=n(it.v)*n(p.area);it.basis='total'}});
+  const d=DEF();for(const k in d)if(p[k]===undefined)p[k]=d[k];
+  ['owner','operator','cap'].forEach(k=>{for(const j in d[k])if(p[k][j]===undefined)p[k][j]=d[k][j]});
+  p.investors.forEach(x=>{if(!x.id)x.id=uid();if(x.fx===undefined)x.fx=''});
+  if(p.status==='running'&&p.planLocked===undefined)p.planLocked=true;
+  if(!['all','todate','custom'].includes(p.range)){p.range=p.view==='custom'?'custom':'all';if(p.view==='custom')p.view='month'}}
+
+/* ================= EVENTS ================= */
+document.addEventListener('input',e=>{const k=e.target.dataset&&e.target.dataset.k;
+  if(!k){if(e.target.closest('#vActual'))previewForms();return}
+  let v=e.target.type==='checkbox'?e.target.checked:e.target.value;
+  if(e.target.type==='number'&&v!=='')v=parseFloat(v);
+  set(k,v);if(e.target.dataset.rr)renderRates();
+  update();dirty(k);
+});
+document.addEventListener('change',e=>{if(e.target.tagName==='SELECT'){if(e.target.dataset.k){set(e.target.dataset.k,e.target.value);if(/^items\.\d+\.(basis|cur)$/.test(e.target.dataset.k))update();update();dirty(e.target.dataset.k)}else if(e.target.closest('#vActual'))previewForms()}});
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-seg] button');
+  if(b&&S){const path=b.closest('[data-seg]').dataset.seg,v=b.dataset.v,old=get(path);
+    if(path.endsWith('.mode')&&old!==v){const base=path.slice(0,-5),p=get(base),T=C?C.T:0,a=partyAmounts(p,T);
+      p.v=v==='pct'?(T>0?Math.round(a.u/T*1000)/10:0):v==='val'?Math.round(a.u):Math.round(a.e);
+      const inp=document.querySelector(`[data-k="${base}.v"]`);if(inp)inp.value=p.v}
+    set(path,v);update();dirty(path);return}
+  const d=e.target.closest('[data-del]');
+  if(d){const [arr,i]=d.dataset.del.split('.');S[arr].splice(+i,1);arr==='seasons'?renderSeasons():arr==='items'?renderItems():renderFunding();update();dirty();return}
+  const rm=e.target.closest('[data-rm]');
+  if(rm){if(!rm.dataset.c){rm.dataset.c=1;rm.textContent='Delete?';setTimeout(()=>{if(rm.isConnected){delete rm.dataset.c;rm.textContent='✕'}},3000);return}
+    const [arr,id]=rm.dataset.rm.split(':');S[arr]=S[arr].filter(x=>x.id!==id);update();commit();return}
+  const o=e.target.closest('[data-open]');if(o){const p=projects.find(x=>x.id===o.dataset.open);if(p)openProject(p);return}
+  const ht=e.target.closest('[data-ht]');if(ht){homeTab=ht.dataset.ht;renderHome();window.scrollTo(0,0);return}
+  const pt=e.target.closest('[data-pt]');if(pt){showTab(pt.dataset.pt);return}
+  const at=e.target.closest('[data-a]');if(at){actTab=at.dataset.a;renderActuals();return}
+});
+$('bBack').onclick=goHome;
+function setTheme(t){try{localStorage.setItem('rentcalc.theme',t)}catch(e){}if(t==='auto')delete document.documentElement.dataset.theme;else document.documentElement.dataset.theme=t}
+$('bTheme').onclick=()=>{let cur='auto';try{cur=localStorage.getItem('rentcalc.theme')||'auto'}catch(e){}
+  const mk=(v,l)=>({l:(cur===v?'✓ ':'')+l,f:()=>setTheme(v)});
+  modal('Settings','All data is stored on this iPhone only. Back up regularly.',[mk('light','Light theme'),mk('dark','Dark theme'),mk('auto','Automatic theme'),
+    {l:'⬆︎ Back up all data',c:'pri',f:backup},{l:'⬇︎ Restore from backup',f:()=>$('restoreFile').click()},{l:'Close',c:'danger'}])};
+$('newProj').onclick=()=>{const p=DEF();p._new=true;projects.push(p);openProject(p)};
+$('bSaveT').onclick=()=>saveProject(S.status==='running'?'Budget saved':'Tender saved');
+$('bRun').onclick=()=>{const R=C;modal('Save as running project?',`Everything in this plan becomes the budget and gets locked. From now on you record actual bookings, expenses and payouts. Operation start: ${monthLabel(R.months[0].key)}.`,[
+  {l:'Save as running',c:'pri',f:async()=>{S.status='running';S.planLocked=true;S.runSince=todayISO();S.range='todate';await saveProject('Now running — add actuals');homeTab='running';showTab('actual')}},{l:'Cancel'}])};
+$('addInv').onclick=()=>{S.investors.push({id:uid(),name:'Investor '+(S.investors.length+1),mode:'pct',v:0,fx:''});renderFunding();update();dirty()};
+$('addItem').onclick=()=>{S.items.push({id:uid(),type:'Finishing',desc:'',basis:'total',v:0,cur:S.items.at(-1)?.cur||'USD'});renderItems();update();dirty()};
+$('addSeason').onclick=()=>{S.seasons.push({name:'Season '+(S.seasons.length+1),from:0,to:1,occ:n(S.occ),adr:''});renderSeasons();update();dirty()};
+$('delProj').onclick=e=>{const b=e.currentTarget;if(!b.dataset.c){b.dataset.c=1;b.textContent='Tap again to delete permanently';setTimeout(()=>{delete b.dataset.c;b.textContent='Delete project'},3000);return}
+  const id=S.id,wasNew=S._new;projects=projects.filter(p=>p.id!==id);delete b.dataset.c;b.textContent='Delete project';if(!wasNew)removeRemote(id);unsaved=false;showHome();toast('Project deleted')};
+$('eCat').innerHTML=CATS.map(c=>`<option>${c}</option>`).join('');
+$('bAdd').onclick=()=>{const b={id:uid(),from:$('bFrom').value,to:$('bTo').value,rate:n($('bRate').value),cur:$('bCur').value,fx:$('bCur').value==='EGP'?n($('bFx').value):'',ch:$('bCh').value,fee:n($('bFee').value),note:$('bNote').value.trim()};
+  if(!nightsOf(b))return toast('Check-out must be after check-in');if(!b.rate)return toast('Enter the nightly rate');if(b.cur==='EGP'&&!b.fx)return toast('Enter the USD rate');
+  S.bookings.push(b);['bFrom','bTo','bRate','bNote'].forEach(i=>$(i).value='');update();commit();toast('Booking added')};
+$('eAdd').onclick=()=>{const x={id:uid(),date:$('eDate').value,cat:$('eCat').value,amt:n($('eAmt').value),cur:$('eCur').value,fx:$('eCur').value==='EGP'?n($('eFx').value):'',note:$('eNote').value.trim()};
+  if(!x.date)return toast('Pick a date');if(!x.amt)return toast('Enter the amount');if(x.cur==='EGP'&&!x.fx)return toast('Enter the USD rate');
+  S.expenses.push(x);['eAmt','eNote'].forEach(i=>$(i).value='');update();commit();toast('Expense added')};
+$('pAdd').onclick=()=>{const x={id:uid(),date:$('pDate').value,party:$('pTo').value,amt:n($('pAmt').value),cur:$('pCur').value,fx:n($('pFx').value),note:$('pNote').value.trim()};
+  if(!x.date)return toast('Pick a date');if(!x.amt)return toast('Enter the amount');if(!x.fx)return toast('Enter the USD rate on that day');
+  S.payouts.push(x);['pAmt','pNote'].forEach(i=>$(i).value='');update();commit();toast('Payout recorded')};
+$('eDate').value=todayISO();$('pDate').value=todayISO();$('cDate').value=todayISO();$('sDate').value=todayISO();
+$('cAdd').onclick=()=>{const x={id:uid(),date:$('cDate').value,party:$('cBy').value,amt:n($('cAmt').value),cur:$('cCur').value,fx:n($('cFx').value),note:$('cNote').value.trim()};
+  if(!x.date)return toast('Pick a date');if(!x.amt)return toast('Enter the amount');if(!x.fx)return toast('Enter the USD rate on that day');
+  S.invPaid.push(x);['cAmt','cNote'].forEach(i=>$(i).value='');update();commit();toast('Payment in recorded')};
+$('sAdd').onclick=()=>{const x={id:uid(),date:$('sDate').value,type:$('sType').value,amt:n($('sAmt').value),cur:$('sCur').value,fx:n($('sFx').value),note:$('sNote').value.trim()};
+  if(!x.date)return toast('Pick a date');if(!x.amt)return toast('Enter the amount');if(!x.fx)return toast('Enter the USD rate on that day');
+  S.invSpend.push(x);['sAmt','sNote'].forEach(i=>$(i).value='');update();commit();toast('Spending recorded')};
+
+/* ================= SUMMARY & PDF ================= */
+function summaryText(){
+  const R=C,run=S.status==='running',{a,b,ok}=rangeIdx(R);if(!ok)return'';
+  const L=[`*${S.name||'Rental project'}*${S.location?' — '+S.location:''}`,`${S.area} m², ${S.beds} BR · ${run?'Running':'Proposal'}`,`Period: ${monthLabel(R.months[a].key)} – ${monthLabel(R.months[b].key)}`,''];
+  const fx=n(S.fxInvest);
+  L.push(`Total investment: ${usd(R.T)}${fx?' ('+egp(R.T*fx)+')':''} · ${usd(R.T/(R.area||1))}/m²`);
+  R.con.forEach(c=>L.push(`• ${c.name}: ${usd(c.amt)} (${pct(c.share*100)})`));L.push('');
+  if(run){const A=computeActual(R).A.slice(a,b+1),Pm=R.months.slice(a,b+1),s=(l,f)=>l.reduce((t,x)=>t+(x[f]||0),0);
+    L.push(`Revenue: ${usd(s(A,'gross'))} (plan ${usd(s(Pm,'gross'))})`,`Occupancy: ${pct(s(A,'nights')/s(A,'days')*100)} (plan ${pct(s(Pm,'nights')/s(Pm,'days')*100)})`,`Expenses: ${usd(s(A,'costs')+s(A,'platform'))}`,`Net: ${usd(s(A,'net'))} (plan ${usd(s(Pm,'net'))})`);
+    L.push('');partyTotals(R,computeActual(R).A,a,b).forEach(p=>L.push(`• ${p.name}: earned ${usd(p.total)}, withdrawn ${usd(p.paidU)} (${egp(p.paidE)})`));
+  }else{const Pm=R.months.slice(a,b+1),s=f=>Pm.reduce((t,x)=>t+x[f],0);
+    L.push(`Projected revenue: ${usd(s('gross'))}`,`Avg occupancy: ${pct(s('nights')/s('days')*100)}`);
+    if(R.capOn)L.push(`Capital returned over ${S.cap.years} yrs + ${S.cap.rateMode==='fixed'?S.cap.rate+'%':'variable'} yearly rate`);
+    L.push('');partyTotals(R,R.months,a,b).forEach(p=>L.push(`• ${p.name}: ${usd(p.total)}${p.amt>0?` · ROI ${pct(p.roi)}/yr · back in ${payStr(p.pay)}`:''}`));}
+  return L.join('\n');
+}
+async function makePdf(){
+  if(!window.jspdf){toast('PDF library not loaded');return}
+  const R=C,run=S.status==='running',{a,b,ok}=rangeIdx(R);if(!ok)return toast('No months in range');
+  const {jsPDF}=window.jspdf,d=new jsPDF({unit:'pt',format:'a4'});
+  const W=d.internal.pageSize.getWidth(),G=[15,92,77],M={left:36,right:36},head={fillColor:G,textColor:255,fontStyle:'bold',fontSize:8.5},bs={fontSize:8.5};
+  const condTxt=[...new Set(S.items.map(i=>i.type))].join(', ')||'Ready unit',fx=n(S.fxInvest);
+  const rl=`${monthLabel(R.months[a].key)} – ${monthLabel(R.months[b].key)}`;
+  d.setFillColor(...G);d.rect(0,0,W,80,'F');d.setTextColor(255);d.setFontSize(19);d.text(S.name||'Rental Investment',36,36);
+  d.setFontSize(10);d.text([S.location,`${S.area} m² · ${S.beds} BR · ${condTxt}`].filter(Boolean).join('   |   '),36,54);
+  d.text(`${run?'Performance report':'Investment proposal'} · ${rl}`,36,69);
+  const T=(y,h,body,opt={})=>{if(y>740){d.addPage();y=40}d.autoTable({startY:y,head:[h],body,headStyles:head,bodyStyles:bs,margin:M,...opt});return d.lastAutoTable.finalY+16};
+  const R_=k=>Object.fromEntries([...Array(k)].map((_,i)=>[i+1,{halign:'right'}]));
+  const kp=(list)=>{const bw=(W-72-30)/4;list.forEach((k,i)=>{const x=36+i*(bw+10);d.setFillColor(231,241,238);d.roundedRect(x,94,bw,58,6,6,'F');d.setFontSize(14);d.setTextColor(...G);d.text(k[0],x+9,116);d.setFontSize(8);d.setTextColor(100);d.text(k[1],x+9,130);if(k[2])d.text(k[2],x+9,142)})};
+  const s=(l,f)=>l.reduce((t,x)=>t+(x[f]||0),0);
+  let y=170;
+  if(run){
+    const A=computeActual(R).A,AR=A.slice(a,b+1),PR=R.months.slice(a,b+1);
+    kp([[usd(s(AR,'gross')),'Revenue (actual)','plan '+usd(s(PR,'gross'))],[pct(s(AR,'nights')/s(AR,'days')*100),'Occupancy','plan '+pct(s(PR,'nights')/s(PR,'days')*100)],[usd(s(AR,'costs')+s(AR,'platform')),'Expenses','plan '+usd(s(PR,'costs')+s(PR,'platform'))],[usd(s(AR,'net')),'Net operating profit','plan '+usd(s(PR,'net'))]]);
+    const F=['gross','platform','costs','net','nights'];const P=group(R.months,a,b,F),AP=group(A,a,b,F);
+    y=T(y,['Period','Occ. plan','Occ. act.','Rev. plan','Rev. actual','Var.','Costs plan','Costs act.','Net plan','Net act.'],P.map((p,i)=>{const x=AP[i],v=p.gross?(x.gross-p.gross)/p.gross*100:NaN;
+      return[p.k,pct(p.nights/p.days*100),pct(x.nights/x.days*100),usd(p.gross),usd(x.gross),isFinite(v)?pct(v):'–',usd(p.platform+p.costs),usd(x.platform+x.costs),usd(p.net),usd(x.net)]}),{columnStyles:R_(9),bodyStyles:{fontSize:7.5},headStyles:{...head,fontSize:7.5}});
+    const cats={};AR.forEach(x=>{for(const k in x.cats)cats[k]=(cats[k]||0)+x.cats[k]});
+    y=T(y,['Expenses by category','USD'],Object.keys(cats).sort((p,q)=>cats[q]-cats[p]).map(k=>[k,usd(cats[k])]).concat([['Platform fees',usd(s(AR,'platform'))],['Total',usd(s(AR,'costs')+s(AR,'platform'))]]),{columnStyles:{1:{halign:'right'}}});
+    const ir=invByType(R);if((S.invSpend||[]).length){const sm=k=>ir.reduce((t,r)=>t+r[k],0);
+      y=T(y,['Investment','Budget USD','Actual USD','Budget EGP','Actual EGP'],ir.map(r=>[r.t,usd(r.bU),usd(r.aU),egp(r.bE),egp(r.aE)]).concat([['Total',usd(sm('bU')),usd(sm('aU')),egp(sm('bE')),egp(sm('aE'))]]),{columnStyles:R_(4)})}
+    const fk=R.months[a].key,tk=R.months[b].key;
+    const bk=S.bookings.filter(x=>x.to.slice(0,7)>=fk&&x.from.slice(0,7)<=tk).sort((p,q)=>p.from.localeCompare(q.from));
+    if(bk.length)y=T(y,['Check-in','Check-out','Nights','Channel','Rate','Total USD'],bk.map(x=>{const nn=nightsOf(x);return[x.from,x.to,nn,x.ch,(x.cur==='EGP'?egp(n(x.rate)):usd(n(x.rate))),usd(rowUsd(x.rate,x.cur,x.fx)*nn)]}),{columnStyles:R_(5)});
+    const PT=partyTotals(R,A,a,b),PP=partyTotals(R,R.months,a,b);
+    y=T(y,['Party','Paid in','Earned (actual)','Plan','Withdrawn USD','Withdrawn EGP','Owed'],PT.map((p,i)=>[p.name+' ('+p.role+')',p.inU?usd(p.inU)+'\n'+egp(p.inE):p.amt?usd(p.amt)+' (budget)'+(p.egpIn?'\n'+egp(p.egpIn)+' @'+p.fxIn:''):'–',usd(p.total),usd(PP[i].total),usd(p.paidU),egp(p.paidE),usd(p.total-p.paidU)]),{columnStyles:R_(6)});
+    const pays=S.payouts.filter(x=>x.date.slice(0,7)>=fk&&x.date.slice(0,7)<=tk).sort((p,q)=>p.date.localeCompare(q.date));
+    if(pays.length)y=T(y,['Date','Paid to','USD','EGP','Rate'],pays.map(x=>[x.date,partyName(x.party),usd(payoutUsd(x)),egp(payoutEgp(x)),n(x.fx)]),{columnStyles:R_(4)});
+    const fxRows=PT.filter(p=>(p.inU||p.amt)>0&&p.paidAllU>0).map(p=>{const bU=p.inU||p.amt,bE=p.inU?p.inE:p.egpIn;return[p.name,usd(bU),bE?egp(bE):'–',usd(p.paidAllU),egp(p.paidAllE),pct((p.paidAllU-bU)/bU*100),bE?pct((p.paidAllE-bE)/bE*100):'–']});
+    if(fxRows.length)y=T(y,['Investor','In USD','In EGP','Out USD','Out EGP','Gain USD','Gain EGP'],fxRows,{columnStyles:R_(6)});
+  }else{
+    const y1=R.months.slice(0,12),y1g=s(y1,'gross'),y1d=s(y1,'dist');
+    kp([[usd(R.T),'Total investment',fx?egp(R.T*fx):''],[usd(R.T/(R.area||1)),'Per m²',fx?egp(R.T*fx/(R.area||1)):''],[usd(y1g),'Revenue, year 1',''],[pct(y1d/(R.T||1)*100),'ROI, year 1','']]);
+    const A2=R.area||1;
+    const su=R.items.map(it=>[it.type+(it.desc?' - '+it.desc:''),`${n(it.v).toLocaleString('en-US')} ${it.cur}`,usd(it.usd),fx?egp(it.egp):'–',usd(it.usd/A2),fx?egp(it.egp/A2):'–']);
+    su.push(['Total investment','',usd(R.T),fx?egp(R.T*fx):'–',usd(R.T/A2),fx?egp(R.T*fx/A2):'–']);
+    y=T(y,['Investment','Entered','USD','EGP'+(fx?' @'+fx:''),'USD/m²','EGP/m²'],su,{columnStyles:R_(5),didParseCell:c=>{if(c.section==='body'&&c.row.index===su.length-1)c.cell.styles.fontStyle='bold'}});
+    y=T(y,['Funded by','Role','Share','USD','EGP','Rate'],R.con.map(c=>[c.name,c.role,pct(c.share*100),usd(c.amt),c.fx?egp(c.egp):'–',c.fx||'–']).concat([['Total','',pct(R.funded/(R.T||1)*100),usd(R.funded),'','']]),{columnStyles:R_(5)});
+    const terms=[['Operator fee',`${S.opFee}% of ${S.opBasis==='gross'?'total revenue':'net revenue after costs'}`],['Owner (for the unit)',S.unitMode==='pct'?`${S.unitPct}% of profit after operator fee`:S.unitMode==='fixed'?`${usd(n(S.unitFix))} per month`:'None'],['Running costs',`Platform ${S.plat}% · maintenance ${S.maint}% · fixed ${usd(n(S.opex))}/month`]];
+    if(R.capOn)terms.push(['Capital return',`Over ${S.cap.years} years + ${S.cap.rateMode==='fixed'?S.cap.rate+'% fixed':'variable rate'} on ${S.cap.basis==='outstanding'?'remaining balance':'amount returned'}`]);
+    y=T(y,['Terms',''],terms);
+    y=T(y,['Month','Season','Occupancy','Rate','Revenue'],y1.map(x=>[MON[x.m]+' '+x.y,x.season,x.occ+'%',usd(x.adr),usd(x.gross)]).concat([['Year 1','',pct(s(y1,'nights')/s(y1,'days')*100),'',usd(y1g)]]),{columnStyles:R_(4)});
+    if(R.capOn)y=T(y,['Capital schedule','Rate','Capital back','Interest','Total','Balance'],schedRows(R).map(r=>[`Year ${r.y}`,pct(r.rate),usd(r.p),usd(r.i),usd(r.p+r.i),usd(r.o)]),{columnStyles:R_(5)});
+    const own=S.unitMode!=='none',P=group(R.months,a,b,['gross','net','fee','unit','service','profit','nights']);
+    y=T(y,['Period','Occ.','Revenue','Net','Operator',...(own?['Owner']:[]),...(R.capOn?['Capital+int.']:[]),'Profit split'],P.map(r=>[r.k,pct(r.nights/r.days*100),usd(r.gross),usd(r.net),usd(r.fee),...(own?[usd(r.unit)]:[]),...(R.capOn?[usd(r.service)]:[]),usd(r.profit)]),{columnStyles:R_(7)});
+    const fxP=n(S.fxPayout),PT=partyTotals(R,R.months,a,b);
+    y=T(y,['Party','Invested','Fee / unit','Capital back','Interest','Profit','Total','ROI/yr','Payback'],PT.map(p=>[p.name+' ('+p.role+')',p.amt?usd(p.amt):'–',p.extra?usd(p.extra):'–',p.amt?usd(p.capital):'–',p.amt?usd(p.interest):'–',p.amt?usd(p.profit):'–',usd(p.total),p.amt?pct(p.roi):'–',p.amt?payStr(p.pay):'–']),{columnStyles:R_(8),bodyStyles:{fontSize:7.5},headStyles:{...head,fontSize:7.5}});
+    if(fxP){const rows=PT.filter(p=>p.amt>0&&p.egpIn).map(p=>[p.name,usd(p.amt),egp(p.egpIn)+' @'+p.fxIn,usd(p.invAll),egp(p.invAll*fxP)+' @'+fxP,pct((p.invAll-p.amt)/p.amt*100),pct((p.invAll*fxP-p.egpIn)/p.egpIn*100)]);
+      if(rows.length)y=T(y,['Full term','In USD','In EGP','Out USD','Out EGP','Return USD','Return EGP'],rows,{columnStyles:R_(6)})}
+  }
+  if(y>780){d.addPage();y=50}
+  d.setFontSize(7.5);d.setTextColor(120);
+  d.text(d.splitTextToSize((run?'Actual figures from recorded bookings and expenses; plan figures from the original projection. ':'Projections are estimates based on the assumptions above (rates, occupancy, costs) and are not guaranteed. ')+`Amounts in USD; EGP shown at the stated rates. Prepared ${new Date().toLocaleDateString('en-GB')}.`,W-72),36,y);
+  await saveFile(d.output('blob'),(S.name||'rental-project').replace(/[^\w\- ]+/g,'').trim()+(run?' - performance':' - proposal')+'.pdf','application/pdf');
+}
+$('bCopy').onclick=async()=>{try{await navigator.clipboard.writeText(S?summaryText():dashText());toast('Copied — paste in WhatsApp')}catch(e){toast('Copy not allowed here')}};
+$('bPdf').onclick=()=>S?makePdf():dashPdf();
+
+/* ================= STORAGE (autosave) ================= */
+const LS='rentcalc.projects3';
+function lsGet(){try{return JSON.parse(localStorage.getItem(LS)||'[]')}catch(e){return[]}}
+function lsSet(){localStorage.setItem(LS,JSON.stringify(projects.filter(p=>!p._new)))}
+let saving=Promise.resolve(),unsaved=false,snapshot=null;
+const NODIRTY=['view','range','from','to'];
+function setSaveState(){$('saveState').textContent=!S?'':unsaved?'Unsaved':S._new?'Not saved':'Saved ✓';$('saveState').classList.toggle('dirty',!!S&&(unsaved||S._new))}
+function dirty(k){if(!S||NODIRTY.includes(k))return;unsaved=true;setSaveState();updateBar()}
+function persist(p){p.t=Date.now();const {id,_new,...rec}=JSON.parse(JSON.stringify(p));delete p._new;
+  return saving=saving.then(async()=>{lsSet()}).catch(e=>{toast('Could not save — phone storage may be full');throw e})}
+async function saveProject(msg){try{await persist(S);unsaved=false;snapshot=JSON.stringify(S);setSaveState();updateBar();if(msg)toast(msg)}catch(e){}}
+async function commit(){await saveProject()}  /* actual records save immediately */
+function discard(){const i=projects.indexOf(S);if(S._new){projects.splice(i,1)}else if(snapshot&&i>=0){projects[i]=JSON.parse(snapshot)}unsaved=false}
+function flush(){}
+function removeRemote(id){try{lsSet()}catch(e){toast('Could not delete')}}
+async function saveFile(blob,name,type){
+  const file=new File([blob],name,{type});
+  try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:name});return true}}catch(e){if(e&&e.name==='AbortError')return false}
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.append(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},4000);return true}
+async function backup(){
+  const data={app:'rentals',version:1,exported:new Date().toISOString(),projects:projects.filter(p=>!p._new),dash:D};
+  const ok=await saveFile(new Blob([JSON.stringify(data)],{type:'application/json'}),'Rentals backup '+todayISO()+'.json','application/json');
+  if(ok){try{localStorage.setItem('rentcalc.lastBackup',String(Date.now()))}catch(e){}toast('Backup ready — save it to Files or iCloud');if(!S)renderHome()}}
+$('restoreFile').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
+  let data;try{data=JSON.parse(await f.text())}catch(err){return toast('Not a valid backup file')}
+  if(!data||data.app!=='rentals'||!Array.isArray(data.projects))return toast('Not a Rentals backup file');
+  modal('Restore backup?',`${data.projects.length} project(s) from ${String(data.exported||'').slice(0,10)}. Projects with the same name/ID are replaced; others are kept.`,[
+    {l:'Restore',c:'pri',f:()=>{data.projects.forEach(p=>{migrate(p);const i=projects.findIndex(x=>x.id===p.id);if(i>=0)projects[i]=p;else projects.push(p)});
+      try{lsSet();toast('Restored '+data.projects.length+' project(s)')}catch(err){toast('Could not save — storage full')}showHome()}},{l:'Cancel'}])};
+function modal(title,text,btns){$('mTitle').textContent=title;$('mText').textContent=text;$('mBtns').innerHTML='';
+  btns.forEach(b=>{const x=document.createElement('button');x.textContent=b.l;if(b.c)x.className=b.c;x.onclick=()=>{$('modal').classList.add('hide');b.f&&b.f()};$('mBtns').append(x)});$('modal').classList.remove('hide')}
+function updateBar(){if(!S){const dash=homeTab==='dash';$('bar').classList.toggle('hide',!dash);if(dash){['bSaveT','bRun'].forEach(i=>$(i).classList.add('hide'));$('bCopy').classList.remove('hide');$('bPdf').classList.toggle('hide',!pdfOK)}return}
+  const plan=projTab==='plan',rep=projTab==='report',locked=S.status==='running'&&S.planLocked,run=S.status==='running';
+  $('bSaveT').classList.toggle('hide',!plan||locked);$('bSaveT').textContent=run?'Save budget':'Save tender';
+  $('bRun').classList.toggle('hide',!plan||run);
+  $('bCopy').classList.toggle('hide',!rep);$('bPdf').classList.toggle('hide',!rep||!pdfOK);
+  $('bar').classList.toggle('hide',projTab==='actual'||(plan&&locked));}
+function applyLock(){const locked=S.status==='running'&&S.planLocked;
+  $('vPlan').classList.toggle('locked',locked);
+  $('vPlan').querySelectorAll('input,select,button').forEach(e=>{if(e.id==='delProj'||e.closest('#planBanner'))return;e.disabled=locked});
+  const bn=$('planBanner');
+  if(S.status==='running'){bn.classList.remove('hide');bn.classList.add('lock');
+    bn.innerHTML=locked?`<b>🔒 Budget locked</b><p>Running since ${esc(S.runSince||'')}. This plan is the budget — actual bookings & expenses go in the Actuals tab.</p><button class="x" id="unlockPlan">Unlock to edit budget</button>`
+      :`<b>✏️ Editing budget</b><p>Changes here change the plan you compare actuals against.</p><button class="x" id="lockPlan">Save & lock budget</button>`;
+    const u=$('unlockPlan');if(u)u.onclick=()=>modal('Edit the budget?','The plan is what actuals are compared against. Change it only if the deal terms changed.',[{l:'Unlock',c:'pri',f:()=>{S.planLocked=false;applyLock();updateBar()}},{l:'Cancel'}]);
+    const l=$('lockPlan');if(l)l.onclick=async()=>{S.planLocked=true;await saveProject('Budget saved & locked');applyLock();updateBar()};
+  }else{bn.classList.add('hide')}}
+
+
+
+
+showHome();
+projects=lsGet();projects.forEach(migrate);renderHome();
+try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
